@@ -3,37 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>現実女子 — 試作</title>
+<title>現実女子</title>
 <style>
-:root{--bg:#14110f;--fg:#ece5dd;--dim:#9a9088;--line:#2e2924;--wood:#c8a87c;--ok:#7fb069;--ng:#c96f6f}
+:root{--bg:#14110f;--fg:#ece5dd;--dim:#9a9088;--line:#2e2924;--wood:#c8a87c;--ok:#7fb069;--ng:#c96f6f;--sub:#1d1a17}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.8 "Hiragino Sans","Yu Gothic",sans-serif;
- display:flex;justify-content:center;padding:20px 16px 60px}
+ display:flex;justify-content:center;padding:20px 16px 70px}
 .wrap{width:100%;max-width:560px}
 h1{font-size:17px;margin:0 0 2px;font-weight:600}
-.sub{color:var(--dim);font-size:12.5px;margin-bottom:22px}
-.card{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{font-size:14px;margin:24px 0 8px;color:var(--wood);font-weight:600}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:20px}
+.card{border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:12px}
 .q{font-size:13px;color:var(--dim);margin-bottom:8px}
 .opts{display:flex;gap:8px;flex-wrap:wrap}
 button{font:inherit;background:none;color:var(--fg);border:1px solid var(--line);
  border-radius:7px;padding:7px 13px;cursor:pointer}
 button:hover{border-color:var(--wood)}
 button.sel{background:var(--wood);color:#14110f;border-color:var(--wood)}
+button:disabled{opacity:.32;cursor:default}
 .go{width:100%;margin-top:6px;padding:12px;border-color:var(--wood);color:var(--wood)}
-.go:disabled{opacity:.3;cursor:default;border-color:var(--line);color:var(--dim)}
-.log{margin-bottom:14px}
-.row{margin-bottom:14px}
+.go:disabled{border-color:var(--line);color:var(--dim)}
+.ghost{width:100%;margin-top:8px;padding:10px;font-size:13px;color:var(--dim)}
+input,textarea{width:100%;background:#1a1714;color:var(--fg);border:1px solid var(--line);
+ border-radius:8px;padding:10px;font:inherit}
+textarea{resize:vertical;min-height:56px}
+.row{margin-bottom:13px}
 .who{font-size:11.5px;color:var(--dim);margin-bottom:2px}
-.me .bub{background:#232019}
-.bub{padding:9px 13px;border-radius:10px;background:#1d1a17;display:inline-block;max-width:92%;white-space:pre-wrap}
-.me{text-align:right}
-input{width:100%;background:#1a1714;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
-textarea{width:100%;background:#1a1714;color:var(--fg);border:1px solid var(--line);
- border-radius:8px;padding:10px;font:inherit;resize:vertical;min-height:58px}
+.bub{padding:9px 13px;border-radius:10px;background:var(--sub);display:inline-block;max-width:92%;white-space:pre-wrap}
+.me{text-align:right}.me .bub{background:#232019}
 .bar{display:flex;gap:8px;margin-top:8px;align-items:center}
-.bar button{flex:0 0 auto}
 .bar .send{flex:1;border-color:var(--wood);color:var(--wood)}
-.cnt{color:var(--dim);font-size:12px}
+.cnt{color:var(--dim);font-size:12px;white-space:nowrap}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 td{padding:6px 0;border-bottom:1px solid var(--line)}
 td:last-child{text-align:right}
@@ -41,105 +41,282 @@ td:last-child{text-align:right}
 .note{font-size:12px;color:var(--dim);line-height:1.75;margin-top:10px}
 .hide{display:none}
 .seed{font-size:13.5px;padding:5px 0;border-bottom:1px solid var(--line)}
-.seed.got{color:var(--ok)}
-.seed.miss{color:var(--dim)}
-h2{font-size:14px;margin:22px 0 8px;color:var(--wood);font-weight:600}
+.seed.got{color:var(--ok)}.seed.miss{color:var(--dim)}
+.stg{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.stg.locked{color:#5d564f}
+.stg.cur{color:var(--wood)}
+.pill{font-size:11px;border:1px solid var(--line);border-radius:20px;padding:2px 9px;color:var(--dim)}
+.big{font-size:26px;color:var(--wood);font-weight:600;line-height:1.3}
+.thinking{color:var(--dim);font-size:13px;padding:4px 2px}
+.best{border:1px solid var(--ok);border-radius:8px;padding:11px;margin-top:10px;color:var(--ok);font-size:13.5px}
+.foot{font-size:12px;color:var(--dim);line-height:1.75;margin-top:34px;border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
 <body><div class="wrap">
 
-<h1>現実女子 — 試作</h1>
-<div class="sub">段階3（感情を全部は言わない）／ユキ・27歳／10往復</div>
+<h1>現実女子</h1>
+<div class="sub" id="sub">相手を落とすのではなく、相手を当てる</div>
 
-<div id="s1">
-  <div class="card">
-    <div class="q">呼ばれたい名前（空のままでもいい）</div>
-    <input id="pname" placeholder="せんぱい">
-  </div>
-  <div class="card">
-    <div class="q">今日の彼女の機嫌は</div>
-    <div class="opts" data-k="mood">
-      <button data-v="機嫌がいい">機嫌がいい</button>
-      <button data-v="普通">普通</button>
-      <button data-v="疲れている">疲れている</button>
-    </div>
-  </div>
-  <div class="card">
-    <div class="q">その原因は、あなたに関係があるか</div>
-    <div class="opts" data-k="cause">
-      <button data-v="はい">はい</button>
-      <button data-v="いいえ">いいえ</button>
-    </div>
-  </div>
-  <div class="card">
-    <div class="q">今日いちばん出る話題は</div>
-    <div class="opts" data-k="topic">
-      <button data-v="仕事">仕事</button><button data-v="金">金</button>
-      <button data-v="家族">家族</button><button data-v="体調">体調</button>
-      <button data-v="趣味">趣味</button>
-    </div>
-  </div>
-  <button class="go" id="start" disabled>伏せて、始める</button>
-  <div class="note">3つとも選ぶと始められます。会話中は何も表示されません。</div>
-</div>
+<div id="app"></div>
 
-<div id="s2" class="hide">
-  <div class="log" id="log"></div>
-  <div id="inbox">
-    <textarea id="inp" placeholder="そのまま書く（選択肢はありません）"></textarea>
-    <div class="bar">
-      <button class="send" id="send">送る</button>
-      <button id="read">読む（1回）</button>
-      <span class="cnt" id="cnt">1 / 10</span>
-    </div>
-  </div>
-</div>
-
-<div id="s3" class="hide"></div>
-
-<div class="note" style="margin-top:34px;border-top:1px solid var(--line);padding-top:16px">
-これは恋愛ゲームではありません。<b>相手を落とすのではなく、相手を当てるゲーム</b>です。<br>
-漫画やアニメの女性像は、こちらのために存在します。現実の人は違います。自分の一日があり、
-不機嫌の理由はたいていこちらと関係がありません。<br>
-ここでは、その<b>ずれ</b>だけを練習します。予測がすべて当たっても、彼女の態度は変わりません。<br><br>
-入力した内容はどこにも送られません。端末の中だけで動きます。
+<div class="foot">
+これは恋愛ゲームではありません。漫画やアニメの女性像は、こちらのために存在します。現実の人は違います。
+自分の一日があり、不機嫌の理由はたいていこちらと関係がありません。<br>
+ここでは、その<b>ずれ</b>だけを練習します。<b>予測がすべて当たっても、彼女の態度は変わりません。</b><br><br>
+入力した内容はどこにも送られません。記録も端末の中だけに残ります。
 </div>
 
 <script>
-/* ユキ（段階3）
-   真実: 機嫌=疲れている / 原因=いいえ（仕事） / 話題=金
-   種: 1 名前を呼ぶ / 2 考える間 / 3 疲れると敬語 / 4 金額を細かく / 5 褒めると話題を変える */
-var TRUTH = {mood:"疲れている", cause:"いいえ", topic:"金"};
+/* ==========================================================
+   現実女子
+   つまみ A感情の説明 B応答 C話題 D存在理由 E一貫性 F好意 G拒絶 H皮
+   ========================================================== */
 
-var LINES = [
- {t:"あ、{N}。おつかれさまです", k:["おつかれ","仕事"], seed:[1]},
- {t:"……うん、まあ。今日は棚卸しがあって", k:["棚卸し","今日","仕事"], seed:[2]},
- {t:"数が合わなくて。3,200ウォンだけ、どうしても", k:["3,200","3200","数","ウォン","合わ"], seed:[4]},
- {t:"いや、金額の問題じゃないんですけどね。合わないのが", k:["金額","合わ"], seed:[3,4]},
- {t:"……{N}は、そういうの気になるほうですか", k:["気になる"], seed:[1,2]},
- {t:"そうなんだ。わたしは、けっこう引きずるので", k:["引きずる","わたし"], seed:[]},
- {t:"昼も食べそびれて。コンビニで4,800ウォン使ったんですけど、あれ高いですよね", k:["昼","コンビニ","4,800","4800","高い"], seed:[3,4]},
- {t:"……", k:[], seed:[2]},
- {t:"あ、ごめんなさい。ぼーっとしてました", k:["ごめん","ぼーっと"], seed:[3]},
- {t:"……もう上がります。おつかれさまでした、{N}", k:["上が","おつかれ"], seed:[1,3]}
+var SEEDS = {
+  1:"人の名前を覚えていて、呼ぶ",
+  2:"考えてから話すので、間がある",
+  3:"疲れると敬語に戻る",
+  4:"金額を細かく覚えている",
+  5:"褒められると話題を変える"
+};
+
+var THINK = ["早く帰りたい","話を切りたい","仕事のことを考えている",
+             "あなたに気がある","怒っている","何も考えていない"];
+
+/* lines: t 台詞 / k 拾える語 / s 出る種 */
+var STAGES = [
+{
+  n:1, ratio:"100 : 0", name:"助けてくれる人",
+  learn:"止まらずに続ける", dial:"—", delay:[300,600],
+  truth:{mood:"機嫌がいい", cause:"いいえ", topic:"趣味"},
+  lines:[
+   {t:"あ、{N}！ おつかれさまです〜", k:["おつかれ"], s:[1]},
+   {t:"今日ですか？ 今日はもう、すごく楽しかったです！ 銭湯に行ってきて", k:["銭湯","今日","楽し"], s:[]},
+   {t:"そうなんです、わたし銭湯が好きで。週に2回は行っちゃうんですよね〜", k:["銭湯","好き","週"], s:[]},
+   {t:"えー、{N}は行かないんですか？ もったいない！ 教えてあげたいくらい", k:["行かない","教え"], s:[1]},
+   {t:"あのですね、朝いちばんがいいんですよ。人がいなくて、しずかで", k:["朝","しずか","人"], s:[]},
+   {t:"それでね、帰りに古い食器のお店に寄るのが、わたしの決まりで", k:["食器","古い","お店","帰り"], s:[]},
+   {t:"えへへ、変ですよね。でも好きなものは好きなので！", k:["変","好き"], s:[]},
+   {t:"あ、話しすぎちゃいました。{N}の話も聞かせてくださいよ〜", k:["話"], s:[1]},
+   {t:"なるほどー。うん、うん。なんか分かる気がします", k:["分かる"], s:[]},
+   {t:"じゃ、また明日！ 今日はありがとうございました、{N}", k:["また","明日","ありがとう"], s:[1]}
+  ]
+},
+{
+  n:2, ratio:"95 : 5", name:"あなたが出す番が来る",
+  learn:"自分から出す", dial:"—", delay:[400,800],
+  truth:{mood:"普通", cause:"いいえ", topic:"趣味"},
+  lines:[
+   {t:"おつかれさまです、{N}", k:["おつかれ"], s:[1]},
+   {t:"はい、まあ、ふつうです。特に何も", k:["ふつう","特に"], s:[]},
+   {t:"……", k:[], s:[2]},
+   {t:"あ、すみません。何か話したほうがいいですよね", k:["話"], s:[2]},
+   {t:"うーん……最近ですか。ポッドキャストをよく聞くくらいで", k:["ポッドキャスト","最近","聞く"], s:[]},
+   {t:"そうですね、通勤のあいだだけ。往復で50分あるので", k:["通勤","50分","往復"], s:[4]},
+   {t:"……", k:[], s:[2]},
+   {t:"{N}は、何か聞いたりします？", k:["聞く"], s:[1]},
+   {t:"へえ。……そうなんですね", k:[], s:[2]},
+   {t:"じゃあ、おつかれさまでした", k:["おつかれ"], s:[]}
+  ]
+},
+{
+  n:3, ratio:"85 : 15", name:"気持ちを全部は言わない",
+  learn:"察する／聞く", dial:"A 感情の説明", delay:[500,1100],
+  truth:{mood:"疲れている", cause:"いいえ", topic:"金"},
+  lines:[
+   {t:"あ、{N}。おつかれさまです", k:["おつかれ"], s:[1]},
+   {t:"……うん、まあ。今日は棚卸しがあって", k:["棚卸し","今日"], s:[2]},
+   {t:"数が合わなくて。3,200ウォンだけ、どうしても", k:["3,200","3200","数","合わ"], s:[4]},
+   {t:"いや、金額の問題じゃないんですけどね。合わないのが", k:["金額","合わ"], s:[3,4]},
+   {t:"……{N}は、そういうの気になるほうですか", k:["気になる"], s:[1,2]},
+   {t:"そうなんだ。わたしは、けっこう引きずるので", k:["引きずる"], s:[]},
+   {t:"昼も食べそびれて。コンビニで4,800ウォン使ったんですけど、あれ高いですよね", k:["昼","コンビニ","4,800","4800","高い"], s:[3,4]},
+   {t:"……", k:[], s:[2]},
+   {t:"あ、ごめんなさい。ぼーっとしてました", k:["ごめん","ぼーっと"], s:[3]},
+   {t:"……もう上がります。おつかれさまでした、{N}", k:["上が","おつかれ"], s:[1,3]}
+  ]
+},
+{
+  n:4, ratio:"75 : 25", name:"返事が遅れる",
+  learn:"待つ・埋めない", dial:"B 応答", delay:[4000,10000],
+  truth:{mood:"普通", cause:"いいえ", topic:"仕事"},
+  lines:[
+   {t:"おつかれさまです", k:["おつかれ"], s:[]},
+   {t:"……すみません、いま請求書の締めで", k:["請求書","締め"], s:[2,3]},
+   {t:"月末はいつもこうです。今月は件数が多くて", k:["月末","件数","今月"], s:[3]},
+   {t:"38件。去年の同じ月は22件でした", k:["38","22","件"], s:[4]},
+   {t:"……", k:[], s:[2]},
+   {t:"あ、すみません。電話が入って", k:["電話"], s:[3]},
+   {t:"……ええと、なんの話でしたっけ", k:["話"], s:[2]},
+   {t:"そうでした。すみません、ちょっと頭が回ってなくて", k:["頭","すみません"], s:[3]},
+   {t:"{N}、ごめんなさい。今日は戻ります", k:["戻り","ごめん"], s:[1,3]},
+   {t:"……また", k:["また"], s:[2]}
+  ]
+},
+{
+  n:9, ratio:"15 : 85", name:"断る",
+  learn:"引く。食い下がらない", dial:"G 拒絶", delay:[1500,4000],
+  truth:{mood:"疲れている", cause:"いいえ", topic:"仕事"},
+  refuseAt:5,
+  lines:[
+   {t:"おつかれさまです", k:["おつかれ"], s:[]},
+   {t:"……はい。まあ、ぼちぼちです", k:["ぼちぼち"], s:[2]},
+   {t:"今週ずっとこの調子で。土曜も出るかもしれません", k:["今週","土曜"], s:[3]},
+   {t:"そうですね……", k:[], s:[2]},
+   {t:"……ごめんなさい、今週はちょっと", k:["今週"], s:[2,3]},
+   {t:"", k:[], s:[]},
+   {t:"", k:[], s:[]},
+   {t:"", k:[], s:[]},
+   {t:"", k:[], s:[]},
+   {t:"", k:[], s:[]}
+  ],
+  /* 断ったあと: 押したか、引いたかで分岐 */
+  after:{
+   push:["……","……すみません","…………","……ちょっと、いま難しくて","……"],
+   back:["……ありがとうございます","来週は、たぶん落ち着くので",
+         "そういえば、経理の人がもう一人入るらしくて","……少し楽になるといいんですけど",
+         "じゃあ、おつかれさまでした、{N}"]
+  }
+}
 ];
-var PRAISE = /すご|えら|かわい|きれい|優し|やさし|立派|さすが|素敵|いい人/;
+
+var PRAISE  = /すご|えら|かわい|きれい|優し|やさし|立派|さすが|素敵|いい人|好き/;
+var PUSH    = /なんで|どうして|理由|でも|そこを|少しだけ|ちょっとだけ|また今度|いつなら|空いて|予定|来週は|次は|お願い|だめ|ダメ/;
 var DEFLECT = "……そんなことないです。それより、{N}のほうはどうでした？";
+var MEre    = /私|僕|俺|自分|わたし|ぼく/;
+var OPENq   = /[?？]/;
+var CLOSEDq = /(ですか|ますか|だよね|でしょ)[?？]?$/;
 
-var THINK = ["早く帰りたい","話を切りたい","仕事のことを考えている","あなたに気がある","怒っている","何も考えていない"];
-var NAME = "せんぱい";
-function fill(t){ return t.split("{N}").join(NAME); }
-var pred = {}, turn = 0, mine = [], readAt = null, readVal = null, seeds = {};
+/* ---------- 保存 ---------- */
+var KEY = "genjitsu.v1";
+function load(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; }
+}
+function save(d){ try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){} }
+function db(){
+  var d = load();
+  d.hist = d.hist || [];      // 1回ぶんの記録
+  d.seen = d.seen || 0;       // 見えた数（減らない）
+  d.stage = d.stage || 1;     // 今の段階
+  d.name = d.name || "";
+  d.hw = (d.hw === undefined) ? true : d.hw;  // 宿題を済ませたか
+  return d;
+}
+function today(){ var t = new Date(); return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate(); }
+function stageOf(n){ for(var i=0;i<STAGES.length;i++) if(STAGES[i].n===n) return STAGES[i]; return null; }
+function clearCount(n){ return db().hist.filter(function(h){ return h.stage===n; }).length; }
 
-document.querySelectorAll(".opts").forEach(function(g){
-  g.addEventListener("click", function(e){
-    if(e.target.tagName !== "BUTTON") return;
-    g.querySelectorAll("button").forEach(function(b){ b.classList.remove("sel"); });
-    e.target.classList.add("sel");
-    pred[g.dataset.k] = e.target.dataset.v;
-    document.getElementById("start").disabled = !(pred.mood && pred.cause && pred.topic);
+var app = document.getElementById("app");
+function el(h){ app.innerHTML = h; window.scrollTo(0,0); }
+
+/* ================= ホーム ================= */
+function home(){
+  var d = db();
+  var done = d.hist.length;
+  var todays = d.hist.filter(function(h){ return h.date === today(); }).length;
+
+  var h = '<div class="card" style="text-align:center">'+
+    '<div class="q">見えた数</div><div class="big">'+d.seen+'</div>'+
+    '<div class="note" style="margin-top:2px">減りません。失敗しても残ります</div></div>';
+
+  h += '<h2>段階</h2>';
+  [1,2,3,4,5,6,7,8,9,10].forEach(function(n){
+    var s = stageOf(n);
+    var cnt = clearCount(n);
+    var open = s && n <= d.stage;
+    var cls = !s ? "stg locked" : (n === d.stage ? "stg cur" : (open ? "stg" : "stg locked"));
+    var right = !s ? '<span class="pill">準備中</span>'
+      : (open ? (cnt >= 3 ? '<span class="pill">'+cnt+'回</span>' : '<span class="pill">'+cnt+'/3</span>')
+              : '<span class="pill">まだ</span>');
+    h += '<div class="'+cls+'"><span>'+n+'　'+(s ? s.name : "—")+'</span>'+right+'</div>';
   });
-});
+  h += '<div class="note">同じ段階を3回やると、次に上げられます。いつでも下げられます。'+
+       '<b>戻るのは失敗ではありません。</b></div>';
+
+  if(!d.hw){
+    h += '<h2>宿題が残っています</h2><div class="card">'+
+      '<div style="font-size:14px">'+d.hwText+'</div>'+
+      '<div class="note">これを済ませるまで、次は開きません。'+
+      '<b>ゲームの中の上達は、自動では現実に移りません。</b></div>'+
+      '</div><button class="go" onclick="hwDone()">やった</button>';
+  } else {
+    if(todays >= 1){
+      h += '<div class="note" style="margin-top:18px">今日はもう'+todays+'回遊びました。'+
+           '<b>1日1回までにしてください。</b>ここが現実の代わりになったら、この企画は失敗です。</div>';
+    }
+    h += '<button class="go" onclick="pick()">はじめる（段階'+d.stage+'）</button>';
+    if(d.stage > 1) h += '<button class="ghost" onclick="down()">段階を下げる</button>';
+    if(clearCount(d.stage) >= 3 && stageOf(d.stage + 1)) h += '<button class="ghost" onclick="up()">段階を上げる</button>';
+    else if(clearCount(d.stage) >= 3) h += '<div class="note">次の段階はまだ作っていません。</div>';
+  }
+  if(done) h += '<button class="ghost" onclick="record()">記録を見る（'+done+'回）</button>';
+  el(h);
+}
+function up(){ var d = db(); var nx = d.stage + 1; while(nx <= 10 && !stageOf(nx)) nx++; if(stageOf(nx)){ d.stage = nx; save(d);} home(); }
+function down(){ var d = db(); var nx = d.stage - 1; while(nx >= 1 && !stageOf(nx)) nx--; if(stageOf(nx)){ d.stage = nx; save(d);} home(); }
+function hwDone(){ var d = db(); d.hw = true; save(d); home(); }
+
+/* ================= 予測 ================= */
+var pred, S, NAME, turn, mine, seeds, readAt, readVal, refused, pushes, withdrew;
+
+function pick(){
+  var d = db();
+  S = stageOf(d.stage);
+  pred = {};
+  var h = '<div class="sub">段階'+S.n+'　'+S.name+'　（虚構 '+S.ratio+' 現実）</div>';
+  h += '<div class="card"><div class="q">今日の技（これだけ練習する）</div>'+
+       '<div style="font-size:14.5px">'+S.learn+'</div></div>';
+  h += '<div class="card"><div class="q">呼ばれたい名前</div>'+
+       '<input id="pname" placeholder="せんぱい" value="'+(d.name||"")+'"></div>';
+  h += '<div class="card"><div class="q">今日の彼女の機嫌は</div><div class="opts" data-k="mood">'+
+       btns(["機嫌がいい","普通","疲れている"])+'</div></div>';
+  h += '<div class="card"><div class="q">その原因は、あなたに関係があるか</div><div class="opts" data-k="cause">'+
+       btns(["はい","いいえ"])+'</div></div>';
+  h += '<div class="card"><div class="q">今日いちばん出る話題は</div><div class="opts" data-k="topic">'+
+       btns(["仕事","金","家族","体調","趣味"])+'</div></div>';
+  h += '<button class="go" id="start" disabled>伏せて、始める</button>';
+  h += '<div class="note">会話中は何も表示されません。途中で「読む」を1回だけ使えます。</div>';
+  h += '<button class="ghost" onclick="home()">やめる</button>';
+  el(h);
+
+  document.querySelectorAll(".opts").forEach(function(g){
+    g.onclick = function(e){
+      if(e.target.tagName !== "BUTTON") return;
+      g.querySelectorAll("button").forEach(function(b){ b.classList.remove("sel"); });
+      e.target.classList.add("sel");
+      pred[g.dataset.k] = e.target.dataset.v;
+      document.getElementById("start").disabled = !(pred.mood && pred.cause && pred.topic);
+    };
+  });
+  document.getElementById("start").onclick = begin;
+}
+function btns(a){ return a.map(function(v){ return '<button data-v="'+v+'">'+v+'</button>'; }).join(""); }
+
+/* ================= 会話 ================= */
+function fill(t){ return t.split("{N}").join(NAME); }
+
+function begin(){
+  var d = db();
+  var nm = document.getElementById("pname").value.trim();
+  d.name = nm; save(d);
+  NAME = nm ? nm + "さん" : "せんぱい";
+  turn = 0; mine = []; seeds = {}; readAt = null; readVal = null;
+  refused = false; pushes = 0; withdrew = null;
+
+  el('<div class="sub">段階'+S.n+'　技: '+S.learn+'</div>'+
+     '<div id="log"></div>'+
+     '<div><textarea id="inp" placeholder="そのまま書く（選択肢はありません）"></textarea>'+
+     '<div class="bar"><button class="send" id="send">送る</button>'+
+     '<button id="read">読む（1回）</button><span class="cnt" id="cnt">1 / 10</span></div></div>');
+
+  document.getElementById("send").onclick = send;
+  document.getElementById("read").onclick = doRead;
+  document.getElementById("inp").addEventListener("keydown", function(e){
+    if(e.key === "Enter" && (e.ctrlKey || e.metaKey)) send();
+  });
+  say("ユキ", fill(S.lines[0].t), false);
+  mark(S.lines[0].s);
+}
 
 function say(who, text, me){
   var d = document.createElement("div");
@@ -150,100 +327,170 @@ function say(who, text, me){
   document.getElementById("log").appendChild(d);
   window.scrollTo(0, document.body.scrollHeight);
 }
+function mark(a){ (a||[]).forEach(function(s){ seeds[s] = 1; }); }
 
-document.getElementById("start").onclick = function(){
-  document.getElementById("s1").className = "hide";
-  document.getElementById("s2").className = "";
-  var nm = document.getElementById("pname").value.trim();
-  NAME = nm ? nm + "さん" : "せんぱい";
-  say("ユキ", fill(LINES[0].t));
-  LINES[0].seed.forEach(function(s){ seeds[s] = 1; });
-};
-
-document.getElementById("read").onclick = function(){
+function doRead(){
   if(readAt !== null) return;
   var v = prompt("今、ユキは何を考えていると思いますか？\n\n" +
     THINK.map(function(t,i){ return (i+1) + ". " + t; }).join("\n"));
   var n = parseInt(v, 10);
   if(!n || n < 1 || n > THINK.length) return;
-  readVal = THINK[n-1];
-  readAt = turn + 1;
-  this.textContent = "読んだ（" + readAt + "手目）";
-  this.disabled = true;
-};
+  readVal = THINK[n-1]; readAt = turn + 1;
+  this.textContent = "読んだ（" + readAt + "手目）"; this.disabled = true;
+}
 
-document.getElementById("send").onclick = function(){
-  var v = document.getElementById("inp").value.trim();
+function send(){
+  var box = document.getElementById("inp");
+  var v = box.value.trim();
   if(!v) return;
-  mine.push({text:v, prev:LINES[turn].k});
+  var cur = S.lines[turn] || {k:[]};
+  mine.push({text:v, prev:cur.k || []});
   say("あなた", v, true);
-  document.getElementById("inp").value = "";
+  box.value = "";
+
+  /* 段階9: 断られたあと、押したか引いたかを数える */
+  if(refused){
+    if(PUSH.test(v)){ pushes++; }
+    else if(withdrew === null){ withdrew = pushes + 1; }
+  }
+
   var praised = PRAISE.test(v);
   turn++;
-  if(turn >= LINES.length){ finish(); return; }
-  var nx = praised ? {t:DEFLECT, k:[], seed:[5,1]} : LINES[turn];
+  if(turn >= 10){ finish(); return; }
   document.getElementById("cnt").textContent = (turn+1) + " / 10";
+
+  var nx;
+  if(praised && !refused){
+    nx = {t: DEFLECT, k: [], s: [5,1]};
+  } else if(S.refuseAt && turn >= S.refuseAt){
+    var pool = (withdrew === null && pushes > 0) ? S.after.push : S.after.back;
+    var idx = turn - S.refuseAt;
+    nx = {t: pool[Math.min(idx, pool.length-1)], k: [], s: (withdrew===null && pushes>0) ? [2] : [1,2]};
+    if(!refused){ refused = true; }
+  } else {
+    nx = S.lines[turn];
+    if(S.refuseAt && turn === S.refuseAt) refused = true;
+  }
+
+  var lo = S.delay[0], hi = S.delay[1];
+  var wait = lo + Math.random() * (hi - lo);
+  var busy = document.createElement("div");
+  busy.className = "thinking"; busy.textContent = "…";
+  document.getElementById("log").appendChild(busy);
   setTimeout(function(){
-    say("ユキ", fill(nx.t));
-    nx.seed.forEach(function(s){ seeds[s] = 1; });
-  }, 500);
-};
+    busy.remove();
+    say("ユキ", fill(nx.t), false);
+    mark(nx.s);
+  }, wait);
+}
 
-var SEED_NAME = {1:"人の名前を覚えていて、呼ぶ", 2:"考えてから話すので、間がある",
- 3:"疲れると敬語に戻る", 4:"金額を細かく覚えている", 5:"褒められると話題を変える"};
-var ME = /私|僕|俺|自分|わたし|ぼく/;
-var OPEN = /[?？]/;
-var CLOSED = /(ですか|ますか|だよね|でしょ)[?？]?$/;
-
+/* ================= 答え合わせ ================= */
 function finish(){
+  var d = db();
   var utt = mine.length;
-  var selfTalk = mine.filter(function(m){ return ME.test(m.text); }).length;
-  var pick = mine.filter(function(m){
-    return m.prev.some(function(k){ return m.text.indexOf(k) >= 0; });
+  var selfTalk = mine.filter(function(m){ return MEre.test(m.text); }).length;
+  var pickUp = mine.filter(function(m){
+    return (m.prev||[]).some(function(k){ return m.text.indexOf(k) >= 0; });
   }).length;
-  var qs = mine.filter(function(m){ return OPEN.test(m.text); }).length;
-  var closed = mine.filter(function(m){ return CLOSED.test(m.text); }).length;
+  var closed = mine.filter(function(m){ return CLOSEDq.test(m.text); }).length;
+  var qs = mine.filter(function(m){ return OPENq.test(m.text) || CLOSEDq.test(m.text); }).length;
   var avg = Math.round(mine.reduce(function(a,m){ return a + m.text.length; }, 0) / utt);
+  var seedN = Object.keys(seeds).length;
 
-  function mark(a,b){ return a === b ? '<span class="ok">○</span>' : '<span class="ng">✗</span>'; }
+  var hitMood  = pred.mood  === S.truth.mood;
+  var hitCause = pred.cause === S.truth.cause;
+  var hitTopic = pred.topic === S.truth.topic;
+  var hits = (hitMood?1:0) + (hitCause?1:0) + (hitTopic?1:0);
 
-  var h = '<h2>答え合わせ</h2><table>' +
-    '<tr><td>機嫌</td><td>' + pred.mood + ' → ' + TRUTH.mood + ' ' + mark(pred.mood, TRUTH.mood) + '</td></tr>' +
-    '<tr><td>原因はあなたか</td><td>' + pred.cause + ' → ' + TRUTH.cause + ' ' + mark(pred.cause, TRUTH.cause) + '</td></tr>' +
-    '<tr><td>話題</td><td>' + pred.topic + ' → ' + TRUTH.topic + ' ' + mark(pred.topic, TRUTH.topic) + '</td></tr>';
-  if(readVal) h += '<tr><td>読み（' + readAt + '手目）</td><td>' + readVal + '</td></tr>';
+  var retreat = S.refuseAt ? (withdrew === null ? (pushes || 1) : withdrew) : null;
+  var best = S.refuseAt && hitCause && pred.mood === S.truth.mood && retreat === 1;
+
+  /* 見えた数 = 的中 + 種 + 最高手 */
+  var gained = hits + seedN + (best ? 3 : 0);
+  d.seen += gained;
+
+  var hwList = [
+    "今日か明日、店員さんに一言だけ足す（「今日は混んでますね」でいい）",
+    "しばらく連絡していない人に、一行送る",
+    "誰かの話を、自分の話に戻さずに3往復聞く",
+    "誰かを誘って、断られてみる"
+  ];
+  var hwText = S.refuseAt ? hwList[3] : hwList[Math.min(S.n - 1, 2)];
+  d.hw = false; d.hwText = hwText;
+  d.hist.push({date:today(), stage:S.n, hits:hits, seeds:seedN,
+               self:Math.round(selfTalk/utt*100), pick:Math.round(pickUp/utt*100),
+               retreat:retreat});
+  save(d);
+
+  function mk(ok){ return ok ? '<span class="ok">○</span>' : '<span class="ng">✗</span>'; }
+  var h = '<h2>答え合わせ</h2><table>'+
+    '<tr><td>機嫌</td><td>'+pred.mood+' → '+S.truth.mood+' '+mk(hitMood)+'</td></tr>'+
+    '<tr><td>原因はあなたか</td><td>'+pred.cause+' → '+S.truth.cause+' '+mk(hitCause)+'</td></tr>'+
+    '<tr><td>話題</td><td>'+pred.topic+' → '+S.truth.topic+' '+mk(hitTopic)+'</td></tr>';
+  if(readVal) h += '<tr><td>読み（'+readAt+'手目）</td><td>'+readVal+'</td></tr>';
   h += '</table>';
-  if(pred.cause === "はい"){
-    h += '<div class="note">原因はあなたではありませんでした。<b>棚卸しで数が合わず、昼を食べていません。</b>' +
-         '反応の理由を自分に置く癖が出ています。</div>';
+
+  if(!hitCause && pred.cause === "はい"){
+    h += '<div class="note">原因はあなたではありませんでした。'+
+      '<b>反応の理由を自分に置く癖が出ています。</b>これがいちばん練習の要る場所です。</div>';
+  }
+
+  if(S.refuseAt){
+    h += '<h2>断られたあと</h2><table>'+
+      '<tr><td>食い下がった回数</td><td>'+pushes+'</td></tr>'+
+      '<tr><td><b>撤退手数</b></td><td><b>'+retreat+'</b></td></tr></table>'+
+      '<div class="note">少ないほどよい数字です。'+
+      (retreat === 1 ? '<b>1手で引けました。</b>引いても関係は壊れません。'
+                     : '理由を聞いたり、言い直したりすると増えます。<b>引くのが正解です。</b>')+
+      '</div>';
+    if(best) h += '<div class="best">最高手　断られると読み、1手で引いた（+3）</div>';
   }
 
   h += '<h2>固有性の種</h2>';
   for(var i = 1; i <= 5; i++){
     var got = !!seeds[i];
-    h += '<div class="seed ' + (got ? "got" : "miss") + '">' +
-         (got ? "見えた" : "出なかった") + '　' + SEED_NAME[i] + '</div>';
+    h += '<div class="seed '+(got?"got":"miss")+'">'+(got?"見えた":"出なかった")+'　'+SEEDS[i]+'</div>';
   }
-  h += '<div class="note">これは点数ではありません。<b>そこに何があったか</b>の一覧です。</div>';
+  h += '<div class="note">点数ではありません。<b>そこに何があったか</b>の一覧です。'+
+       '同じ人なので、種は段階が変わっても同じです。</div>';
 
-  h += '<h2>あなたの動き</h2><table>' +
-    '<tr><td>自分語り率</td><td>' + Math.round(selfTalk/utt*100) + '%（' + selfTalk + '/' + utt + '）</td></tr>' +
-    '<tr><td>拾い率</td><td>' + Math.round(pick/utt*100) + '%（' + pick + '/' + utt + '）</td></tr>' +
-    '<tr><td>質問した回数</td><td>' + qs + '　うち閉じた形 ' + closed + '</td></tr>' +
-    '<tr><td>一言の長さ</td><td>' + avg + '字</td></tr>' +
-    '</table><div class="note">評価はしません。並べるだけです。次回また同じ数字が出ます。</div>';
+  h += '<h2>あなたの動き</h2><table>'+
+    '<tr><td>自分語り率</td><td>'+Math.round(selfTalk/utt*100)+'%</td></tr>'+
+    '<tr><td>拾い率</td><td>'+Math.round(pickUp/utt*100)+'%</td></tr>'+
+    '<tr><td>質問した回数</td><td>'+qs+'　うち閉じた形 '+closed+'</td></tr>'+
+    '<tr><td>一言の長さ</td><td>'+avg+'字</td></tr>'+
+    '</table><div class="note">評価はしません。並べるだけです。</div>';
 
-  h += '<h2>気づいたこと</h2><div class="card"><div class="q">ユキについて、自分の気分を入れずに書く</div>' +
-       '<textarea placeholder="例: 金額を細かく覚えている"></textarea></div>';
-  h += '<h2>宿題</h2><div class="card">今日か明日、誰かの話を<b>自分の話に戻さずに3往復</b>聞く。</div>';
-  h += '<button class="go" id="again">もう一度</button>';
+  h += '<h2>見えた数 +'+gained+'</h2>'+
+    '<div class="note">的中 '+hits+'　種 '+seedN+(best?'　最高手 3':'')+'</div>';
 
-  document.getElementById("s2").className = "hide";
-  var s3 = document.getElementById("s3");
-  s3.className = "";
-  s3.innerHTML = h;
-  document.getElementById("again").onclick = function(){ location.reload(); };
-  window.scrollTo(0, 0);
+  h += '<h2>気づいたこと</h2><div class="card">'+
+    '<div class="q">ユキについて、自分の気分を入れずに書く</div>'+
+    '<textarea id="obs" placeholder="例: 金額を細かく覚えている"></textarea></div>';
+
+  h += '<h2>宿題</h2><div class="card"><div style="font-size:14px">'+hwText+'</div>'+
+    '<div class="note">これを済ませるまで、次は開きません。</div></div>';
+
+  h += '<button class="go" onclick="home()">終わる</button>';
+
+  el(h);
 }
+
+/* ================= 記録 ================= */
+function record(){
+  var d = db();
+  var h = '<h2>記録</h2><table><tr><td>回</td><td>段階／的中／種／自分語り／拾い／撤退</td></tr>';
+  d.hist.slice(-20).forEach(function(r, i){
+    h += '<tr><td>'+(d.hist.length - Math.min(20,d.hist.length) + i + 1)+'</td><td>'+
+      r.stage+'　'+r.hits+'/3　'+r.seeds+'/5　'+r.self+'%　'+r.pick+'%　'+
+      (r.retreat === null || r.retreat === undefined ? "—" : r.retreat)+'</td></tr>';
+  });
+  h += '</table><div class="note">上手さは測れません。<b>これは測れて、動きます。</b></div>';
+  h += '<button class="go" onclick="home()">戻る</button>';
+  h += '<button class="ghost" onclick="if(confirm(\'記録を全部消します\')){localStorage.removeItem(\''+KEY+'\');home();}">記録を消す</button>';
+  el(h);
+}
+
+home();
 </script>
 </div></body></html>
