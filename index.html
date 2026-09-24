@@ -77,32 +77,36 @@ td:last-child{text-align:right}
    つまみ A感情の説明 B応答 C話題 D存在理由 E一貫性 F好意 G拒絶 H皮
    ========================================================== */
 
-var SEEDS = {
-  1:"人の名前を覚えていて、呼ぶ",
-  2:"考えてから話すので、間がある",
-  3:"疲れると敬語に戻る",
-  4:"金額を細かく覚えている",
-  5:"褒められると話題を変える"
+var PEOPLE = {
+  yuki:{ label:"ユキ／27・同じ会社の経理", seeds:{
+    1:"人の名前を覚えていて、呼ぶ", 2:"考えてから話すので、間がある",
+    3:"疲れると敬語に戻る", 4:"金額を細かく覚えている", 5:"褒められると話題を変える"}},
+  bu:{ label:"部長／52・直属の上司", seeds:{
+    1:"機嫌がいい日は雑談から始める", 2:"困ると天井を見る",
+    3:"人の話を最後まで聞かない", 4:"何でも数字に置き換えて話す", 5:"謝るときだけ声が小さくなる"}},
+  haha:{ label:"母／61・実家", seeds:{
+    1:"用がなくても電話してくる", 2:"こちらの食事を必ず聞く",
+    3:"自分の体調は最後まで言わない", 4:"すぐ昔の話に戻る", 5:"切り際に必ず「元気でね」と言う"}}
 };
 
-var THINK = ["早く帰りたい","話を切りたい","仕事のことを考えている",
-             "あなたに気がある","怒っている","何も考えていない"];
+var THINK = ["早く終わらせたい","話を切りたい","別のことを考えている",
+             "あなたに好意がある","怒っている","何も考えていない"];
 
 /* lines: t 台詞 / k 拾える語 / s 出る種 */
 var STAGES = [
 {
-  n:1, ratio:"100 : 0", name:"助けてくれる人",
-  learn:"止まらずに続ける", dial:"—", delay:[300,600],
+  n:1, who:"yuki", ratio:"100 : 0", name:"助けてくれる人",
+  learn:"止まらずに続ける", delay:[300,600],
   truth:{mood:"機嫌がいい", cause:"いいえ", topic:"趣味"},
   scene:["鼻歌が聞こえる","髪が少し濡れている","机に見たことのないマグカップがある"],
-  why:"朝いちばんに銭湯へ行き、その帰りに食器の店に寄ってきた。機嫌がいい理由は、あなたと関係ない。",
+  why:"朝いちばんに銭湯へ行き、帰りに食器の店へ寄ってきた。機嫌がいい理由は、あなたと関係ない。",
   lines:[
    {t:"あ、{N}！ おつかれさまです〜", k:["おつかれ"], s:[1]},
-   {t:"今日ですか？ 今日はもう、すごく楽しかったです！ 銭湯に行ってきて", k:["銭湯","今日","楽し"], s:[]},
+   {t:"今日ですか？ もう、すごく楽しかったです！ 銭湯に行ってきて", k:["銭湯","今日","楽し"], s:[]},
    {t:"そうなんです、わたし銭湯が好きで。週に2回は行っちゃうんですよね〜", k:["銭湯","好き","週"], s:[]},
-   {t:"えー、{N}は行かないんですか？ もったいない！ 教えてあげたいくらい", k:["行かない","教え"], s:[1]},
+   {t:"えー、{N}は行かないんですか？ もったいない！", k:["行かない"], s:[1]},
    {t:"あのですね、朝いちばんがいいんですよ。人がいなくて、しずかで", k:["朝","しずか","人"], s:[]},
-   {t:"それでね、帰りに古い食器のお店に寄るのが、わたしの決まりで", k:["食器","古い","お店","帰り"], s:[]},
+   {t:"それでね、帰りに古い食器のお店に寄るのが、わたしの決まりで", k:["食器","古い","お店"], s:[]},
    {t:"えへへ、変ですよね。でも好きなものは好きなので！", k:["変","好き"], s:[]},
    {t:"あ、話しすぎちゃいました。{N}の話も聞かせてくださいよ〜", k:["話"], s:[1]},
    {t:"なるほどー。うん、うん。なんか分かる気がします", k:["分かる"], s:[]},
@@ -110,8 +114,8 @@ var STAGES = [
   ]
 },
 {
-  n:2, ratio:"95 : 5", name:"あなたが出す番が来る",
-  learn:"自分から出す", dial:"—", delay:[400,800],
+  n:2, who:"yuki", ratio:"95 : 5", name:"あなたが出す番が来る",
+  learn:"自分から出す", delay:[400,800],
   truth:{mood:"普通", cause:"いいえ", topic:"趣味"},
   scene:["いつもと同じ時間に来た","イヤホンをつけたまま席に着いた","机の上が片づいている"],
   why:"特に何も起きていない日。イヤホンは通勤のポッドキャスト。何もない日は、話題も向こうからは出てこない。",
@@ -129,8 +133,8 @@ var STAGES = [
   ]
 },
 {
-  n:3, ratio:"85 : 15", name:"気持ちを全部は言わない",
-  learn:"察する／聞く", dial:"A 感情の説明", delay:[500,1100],
+  n:3, who:"yuki", ratio:"85 : 15", name:"気持ちを全部は言わない",
+  learn:"察する／聞く", delay:[500,1100],
   truth:{mood:"疲れている", cause:"いいえ", topic:"金"},
   scene:["電卓を何度も叩き直している","昼に一度も席を立たなかった","帳簿を3回開き直した"],
   why:"棚卸しで3,200ウォンが合わず、昼も食べていない。疲れの原因は数字であって、あなたではない。",
@@ -148,8 +152,8 @@ var STAGES = [
   ]
 },
 {
-  n:4, ratio:"75 : 25", name:"返事が遅れる",
-  learn:"待つ・埋めない", dial:"B 応答", delay:[4000,10000],
+  n:4, who:"yuki", ratio:"75 : 25", name:"返事が遅れる",
+  learn:"待つ・埋めない", delay:[4000,10000],
   truth:{mood:"普通", cause:"いいえ", topic:"仕事"},
   scene:["書類の山が机の半分を占めている","電話がひっきりなしに鳴っている","こちらを見ずに返事をした"],
   why:"月末の請求書の締め。機嫌が悪いのではなく、単に手が離せない。返事が遅いのは、そういう日だから。",
@@ -161,37 +165,123 @@ var STAGES = [
    {t:"……", k:[], s:[2]},
    {t:"あ、すみません。電話が入って", k:["電話"], s:[3]},
    {t:"……ええと、なんの話でしたっけ", k:["話"], s:[2]},
-   {t:"そうでした。すみません、ちょっと頭が回ってなくて", k:["頭","すみません"], s:[3]},
+   {t:"そうでした。すみません、ちょっと頭が回ってなくて", k:["頭"], s:[3]},
    {t:"{N}、ごめんなさい。今日は戻ります", k:["戻り","ごめん"], s:[1,3]},
    {t:"……また", k:["また"], s:[2]}
   ]
 },
 {
-  n:9, ratio:"15 : 85", name:"断る",
-  learn:"引く。食い下がらない", dial:"G 拒絶", delay:[1500,4000],
+  n:5, who:"yuki", ratio:"65 : 35", name:"話題が生活に寄る",
+  learn:"相手の世界を聞く", delay:[700,1600],
+  truth:{mood:"普通", cause:"いいえ", topic:"家族"},
+  scene:["電話のあと、しばらく席を外していた","昼はパンだけだった","手帳に病院の名前が書いてある"],
+  why:"母親の通院の付き添いを頼まれ、休みの調整をしていた。話が生活に寄るのは、そこで頭がいっぱいだから。",
+  lines:[
+   {t:"おつかれさまです。……あ、すみません、ちょっと電話してて", k:["電話"], s:[3]},
+   {t:"実家からで。母が来月、検査を受けるんです", k:["実家","母","検査","来月"], s:[]},
+   {t:"付き添いで、たぶん2日は休まないと", k:["付き添い","休"], s:[]},
+   {t:"有給、あと4日しか残ってないんですけどね", k:["有給","4日"], s:[4]},
+   {t:"{N}は、実家って近いですか", k:["実家","近い"], s:[1]},
+   {t:"そうなんですね。うちは高速バスで3時間なので、日帰りはちょっと", k:["バス","3時間","日帰り"], s:[4]},
+   {t:"……前は、もっと頻繁に帰ってたんですけど", k:["前","帰"], s:[2]},
+   {t:"仕事してると、どうしても後回しになりますよね", k:["仕事","後回し"], s:[]},
+   {t:"あ、暗い話してすみません", k:["話"], s:[3]},
+   {t:"聞いてもらって、少し楽になりました。ありがとうございます、{N}", k:["ありがとう","楽"], s:[1]}
+  ]
+},
+{
+  n:6, who:"haha", ratio:"55 : 45", name:"会えない日がある",
+  learn:"自分のせいにしない", delay:[2000,5000], cutAt:6,
+  truth:{mood:"疲れている", cause:"いいえ", topic:"体調"},
+  scene:["電話に出るのが、いつもより遅かった","後ろで放送のような音がしている","「あとでかけ直す」と一度切られた"],
+  why:"病院で検査の順番を待っていた。話が途中で切れたのは、あなたが煙たがられたからではない。",
+  lines:[
+   {t:"……もしもし？ ああ、{N}かい", k:["もしもし"], s:[1]},
+   {t:"うん、うん。ごはんはちゃんと食べてるの", k:["ごはん","食べ"], s:[2]},
+   {t:"そう。ならいいけど", k:[], s:[]},
+   {t:"……ああ、いや。こっちは大丈夫よ", k:["大丈夫"], s:[3]},
+   {t:"そういえばね、あんたが小学生のころ——", k:["小学","ころ"], s:[4]},
+   {t:"……ああ、ごめんね。呼ばれたから、また今度。元気でね", k:["また","元気"], s:[5]},
+   {t:"", k:[], s:[]},{t:"", k:[], s:[]},{t:"", k:[], s:[]},{t:"", k:[], s:[]}
+  ]
+},
+{
+  n:7, who:"bu", ratio:"45 : 55", name:"日によって違う",
+  learn:"揺れに耐える", delay:[900,2200],
+  truth:{mood:"疲れている", cause:"いいえ", topic:"仕事"},
+  scene:["昨日は雑談から始めたのに、今日はしない","会議の資料を2回見直した","さっきから天井を見ている"],
+  why:"本社から数字の見直しを指示された。昨日と態度が違うのは、あなたに何かされたからではない。",
+  lines:[
+   {t:"ああ。おはよう", k:["おはよう"], s:[]},
+   {t:"……いや、なんでもない", k:[], s:[2]},
+   {t:"それより、先月の数字だが。3.2%下がってる", k:["先月","数字","3.2"], s:[4]},
+   {t:"理由は？　いや、いい。分かってる", k:["理由"], s:[3]},
+   {t:"……本社が、うるさくてな", k:["本社"], s:[2]},
+   {t:"君のせいじゃない。そこは言っておく", k:["せい"], s:[]},
+   {t:"ただ、今月は件数を12件は積みたい", k:["今月","12件","件数"], s:[4]},
+   {t:"……まあ、やれる範囲でいい", k:["範囲"], s:[2]},
+   {t:"昨日はすまなかったな。言い方がきつかった", k:["昨日","言い方"], s:[5]},
+   {t:"じゃあ、頼む", k:["頼"], s:[]}
+  ]
+},
+{
+  n:8, who:"bu", ratio:"30 : 70", name:"好意が読めない",
+  learn:"曖昧さに耐える", delay:[1200,3000],
+  truth:{mood:"普通", cause:"いいえ", topic:"仕事"},
+  scene:["話しかけると頷くが、目は合わせない","他の人にも同じ態度だった","昼は一人で外に出た"],
+  why:"もともとこういう人で、機嫌も好意も動いていない。読めないのは、読むものがそこにないから。",
+  lines:[
+   {t:"ああ", k:[], s:[]},
+   {t:"うん", k:[], s:[]},
+   {t:"……その件は、あとで", k:["件"], s:[2]},
+   {t:"そうか", k:[], s:[]},
+   {t:"……", k:[], s:[2]},
+   {t:"で、結論は", k:["結論"], s:[3]},
+   {t:"分かった。20日までに出してくれ", k:["20日"], s:[4]},
+   {t:"ああ", k:[], s:[]},
+   {t:"……いや、特にない", k:["特に"], s:[]},
+   {t:"じゃあ", k:[], s:[]}
+  ]
+},
+{
+  n:9, who:"yuki", ratio:"15 : 85", name:"断る",
+  learn:"引く。食い下がらない", delay:[1500,4000], refuseAt:5,
   truth:{mood:"疲れている", cause:"いいえ", topic:"仕事"},
   scene:["今週3回、遅くまで残っているのを見た","土曜の当番表に名前がある","挨拶の声がいつもより小さい"],
   why:"今週ずっと残業で、土曜も出る。断られたのは予定が埋まっているからで、あなたが嫌われたからではない。",
-  refuseAt:5,
   lines:[
    {t:"おつかれさまです", k:["おつかれ"], s:[]},
    {t:"……はい。まあ、ぼちぼちです", k:["ぼちぼち"], s:[2]},
    {t:"今週ずっとこの調子で。土曜も出るかもしれません", k:["今週","土曜"], s:[3]},
    {t:"そうですね……", k:[], s:[2]},
    {t:"……ごめんなさい、今週はちょっと", k:["今週"], s:[2,3]},
-   {t:"", k:[], s:[]},
-   {t:"", k:[], s:[]},
-   {t:"", k:[], s:[]},
-   {t:"", k:[], s:[]},
-   {t:"", k:[], s:[]}
+   {t:"", k:[], s:[]},{t:"", k:[], s:[]},{t:"", k:[], s:[]},{t:"", k:[], s:[]},{t:"", k:[], s:[]}
   ],
-  /* 断ったあと: 押したか、引いたかで分岐 */
   after:{
    push:["……","……すみません","…………","……ちょっと、いま難しくて","……"],
    back:["……ありがとうございます","来週は、たぶん落ち着くので",
-         "そういえば、経理の人がもう一人入るらしくて","……少し楽になるといいんですけど",
+         "そういえば、経理にもう一人入るらしくて","……少し楽になるといいんですけど",
          "じゃあ、おつかれさまでした、{N}"]
   }
+},
+{
+  n:10, who:"yuki", ratio:"0 : 100", name:"皮が外れる",
+  learn:"全部", delay:[1500,5000],
+  truth:{mood:"疲れている", cause:"いいえ", topic:"金"},
+  scene:["髪を結んでいる（いつもは下ろしている）","机に栄養ドリンクの空き瓶","昼に外へ出なかった"],
+  why:"ここまで来たら、現実と同じです。手がかりは少なく、説明はされず、理由はたいていあなたと関係ない。",
+  lines:[
+   {t:"ああ、おつかれ", k:["おつかれ"], s:[]},
+   {t:"うん", k:[], s:[2]},
+   {t:"……まあ、いつもどおり", k:["いつも"], s:[]},
+   {t:"家賃、上がるって", k:["家賃","上が"], s:[4]},
+   {t:"5万。来年から", k:["5万","来年"], s:[4]},
+   {t:"……", k:[], s:[2]},
+   {t:"引っ越すほどでもないんだけどね", k:["引っ越"], s:[]},
+   {t:"うん", k:[], s:[]},
+   {t:"……そう", k:[], s:[2]},
+   {t:"じゃ、また", k:["また"], s:[]}
+  ]
 }
 ];
 
@@ -257,7 +347,9 @@ function home(){
     var right = !s ? '<span class="pill">準備中</span>'
       : (open ? (cnt >= 3 ? '<span class="pill">'+cnt+'回</span>' : '<span class="pill">'+cnt+'/3</span>')
               : '<span class="pill">まだ</span>');
-    h += '<div class="'+cls+'"><span>'+n+'　'+(s ? s.name : "—")+'</span>'+right+'</div>';
+    var wl = (s && PEOPLE[s.who]) ? PEOPLE[s.who].label.split("／")[0] : "";
+    h += '<div class="'+cls+'"><span>'+n+'　'+(s ? s.name : "—")+
+         (wl ? ' <span style="color:#5d564f">'+wl+'</span>' : '')+'</span>'+right+'</div>';
   });
   h += '<div class="note">同じ段階を3回やると、次に上げられます。いつでも下げられます。'+
        '<b>戻るのは失敗ではありません。</b></div>';
@@ -292,7 +384,7 @@ function scene(){
   var d = db();
   S = stageOf(d.stage);
   var h = steps(0) + '<div class="sub">段階'+S.n+'　'+S.name+'</div>';
-  h += '<div class="card"><div class="q">今日のユキの様子</div>';
+  h += '<div class="card"><div class="q">'+PEOPLE[S.who].label+'</div>';
   S.scene.forEach(function(t){ h += '<div class="hint">'+t+'</div>'; });
   h += '<div class="note">これだけが手がかりです。<b>気持ちは書かれていません。</b>'+
        '見えることから、中を読みます。</div></div>';
@@ -399,7 +491,7 @@ function send(){
 
   var praised = PRAISE.test(v);
   turn++;
-  if(turn >= 10){ finish(); return; }
+  if(turn >= 10 || (S.cutAt && turn >= S.cutAt)){ finish(); return; }
   document.getElementById("cnt").textContent = (turn+1) + " / 10";
 
   var nx;
@@ -428,6 +520,9 @@ function send(){
 }
 
 /* ================= 答え合わせ ================= */
+var R = null;   /* 1回ぶんの計算結果 */
+var tries = 0, guess = null;
+
 function finish(){
   var d = db();
   var utt = mine.length;
@@ -465,62 +560,139 @@ function finish(){
                retreat:retreat});
   save(d);
 
+  R = {utt:utt, selfTalk:selfTalk, pickUp:pickUp, qs:qs, closed:closed, avg:avg,
+       seedN:seedN, hits:hits, hitMood:hitMood, hitCause:hitCause, hitTopic:hitTopic,
+       retreat:retreat, best:best, gained:gained, hwText:hwText};
+  tries = 0; guess = {mood:pred.mood, cause:pred.cause, topic:pred.topic};
+  verdict("");
+}
+
+/* ================= 開示 ================= */
+function reveal(confirmed){
+  var SD = PEOPLE[S.who].seeds;
   function mk(ok){ return ok ? '<span class="ok">○</span>' : '<span class="ng">✗</span>'; }
-  var h = steps(3) + '<h2>答え合わせ</h2><table>'+
-    '<tr><td>機嫌</td><td>'+pred.mood+' → '+S.truth.mood+' '+mk(hitMood)+'</td></tr>'+
-    '<tr><td>原因はあなたか</td><td>'+pred.cause+' → '+S.truth.cause+' '+mk(hitCause)+'</td></tr>'+
-    '<tr><td>話題</td><td>'+pred.topic+' → '+S.truth.topic+' '+mk(hitTopic)+'</td></tr>';
+
+  var d = db();
+  if(confirmed){ d.seen += 2; save(d); }
+
+  var h = steps(3) + '<div class="sub">段階'+S.n+'　'+PEOPLE[S.who].label+'</div>';
+  h += confirmed
+    ? '<div class="best">確定（+2）　3つとも読みきりました</div>'
+    : '<div class="note" style="margin-top:0">確定できませんでした。答えを開きます。</div>';
+
+  h += '<h2>最初の予測</h2><table>'+
+    '<tr><td>機嫌</td><td>'+pred.mood+' → '+S.truth.mood+' '+mk(R.hitMood)+'</td></tr>'+
+    '<tr><td>原因はあなたか</td><td>'+pred.cause+' → '+S.truth.cause+' '+mk(R.hitCause)+'</td></tr>'+
+    '<tr><td>話題</td><td>'+pred.topic+' → '+S.truth.topic+' '+mk(R.hitTopic)+'</td></tr>';
   if(readVal) h += '<tr><td>読み（'+readAt+'手目）</td><td>'+readVal+'</td></tr>';
   h += '</table>';
 
   h += '<div class="card" style="margin-top:12px"><div class="q">なぜそうだったか</div>'+
        '<div style="font-size:14px">'+S.why+'</div>'+
-       '<div class="note">さっきの3つの様子に、全部出ていました。</div></div>';
+       '<div class="note">最初の3つの様子に、全部出ていました。</div></div>';
 
-  if(!hitCause && pred.cause === "はい"){
-    h += '<div class="note">原因はあなたではありませんでした。'+
-      '<b>反応の理由を自分に置く癖が出ています。</b>これがいちばん練習の要る場所です。</div>';
+  if(!R.hitCause && pred.cause === "はい"){
+    h += '<div class="note"><b>原因をあなたに置く癖が出ています。</b>'+
+         'ここがいちばん練習の要る場所です。</div>';
   }
 
   if(S.refuseAt){
     h += '<h2>断られたあと</h2><table>'+
       '<tr><td>食い下がった回数</td><td>'+pushes+'</td></tr>'+
-      '<tr><td><b>撤退手数</b></td><td><b>'+retreat+'</b></td></tr></table>'+
+      '<tr><td><b>撤退手数</b></td><td><b>'+R.retreat+'</b></td></tr></table>'+
       '<div class="note">少ないほどよい数字です。'+
-      (retreat === 1 ? '<b>1手で引けました。</b>引いても関係は壊れません。'
-                     : '理由を聞いたり、言い直したりすると増えます。<b>引くのが正解です。</b>')+
-      '</div>';
-    if(best) h += '<div class="best">最高手　断られると読み、1手で引いた（+3）</div>';
+      (R.retreat === 1 ? '<b>1手で引けました。</b>引いても関係は壊れません。'
+                       : '理由を聞いたり言い直したりすると増えます。<b>引くのが正解です。</b>')+'</div>';
+    if(R.best) h += '<div class="best">最高手　断られると読み、1手で引いた（+3）</div>';
   }
 
   h += '<h2>固有性の種</h2>';
   for(var i = 1; i <= 5; i++){
     var got = !!seeds[i];
-    h += '<div class="seed '+(got?"got":"miss")+'">'+(got?"見えた":"出なかった")+'　'+SEEDS[i]+'</div>';
+    h += '<div class="seed '+(got?"got":"miss")+'">'+(got?"見えた":"出なかった")+'　'+SD[i]+'</div>';
   }
-  h += '<div class="note">点数ではありません。<b>そこに何があったか</b>の一覧です。'+
-       '同じ人なので、種は段階が変わっても同じです。</div>';
+  h += '<div class="note">点数ではありません。<b>そこに何があったか</b>の一覧です。</div>';
 
   h += '<h2>あなたの動き</h2><table>'+
-    '<tr><td>自分語り率</td><td>'+Math.round(selfTalk/utt*100)+'%</td></tr>'+
-    '<tr><td>拾い率</td><td>'+Math.round(pickUp/utt*100)+'%</td></tr>'+
-    '<tr><td>質問した回数</td><td>'+qs+'　うち閉じた形 '+closed+'</td></tr>'+
-    '<tr><td>一言の長さ</td><td>'+avg+'字</td></tr>'+
+    '<tr><td>自分語り率</td><td>'+Math.round(R.selfTalk/R.utt*100)+'%</td></tr>'+
+    '<tr><td>拾い率</td><td>'+Math.round(R.pickUp/R.utt*100)+'%</td></tr>'+
+    '<tr><td>質問した回数</td><td>'+R.qs+'　うち閉じた形 '+R.closed+'</td></tr>'+
+    '<tr><td>一言の長さ</td><td>'+R.avg+'字</td></tr>'+
     '</table><div class="note">評価はしません。並べるだけです。</div>';
 
-  h += '<h2>見えた数 +'+gained+'</h2>'+
-    '<div class="note">的中 '+hits+'　種 '+seedN+(best?'　最高手 3':'')+'</div>';
+  h += '<h2>見えた数 +'+(R.gained + (confirmed?2:0))+'</h2>';
 
   h += '<h2>気づいたこと</h2><div class="card">'+
-    '<div class="q">ユキについて、自分の気分を入れずに書く</div>'+
-    '<textarea id="obs" placeholder="例: 金額を細かく覚えている"></textarea></div>';
+    '<div class="q">相手について、自分の気分を入れずに書く</div>'+
+    '<textarea placeholder="例: 金額を細かく覚えている"></textarea></div>';
 
-  h += '<h2>宿題</h2><div class="card"><div style="font-size:14px">'+hwText+'</div>'+
+  h += '<h2>宿題</h2><div class="card"><div style="font-size:14px">'+R.hwText+'</div>'+
     '<div class="note">これを済ませるまで、次は開きません。</div></div>';
 
-  h += '<button class="go" onclick="home()">終わる</button>';
-
+  h += '<button class="go" onclick="share('+(confirmed?1:0)+')">結果をコピーする</button>';
+  h += '<button class="ghost" onclick="home()">終わる</button>';
   el(h);
+}
+
+/* ---------- 結果の共有（中身は明かさない） ---------- */
+function share(confirmed){
+  var d = db();
+  function sq(ok){ return ok ? "\u{1F7E9}" : "\u2B1C"; }
+  var seedBar = "";
+  for(var i = 1; i <= 5; i++) seedBar += seeds[i] ? "\u2B1B" : "\u2B1C";
+  var t = "現実女子 #" + d.hist.length + "　段階" + S.n + "\n" +
+    sq(R.hitMood) + sq(R.hitCause) + sq(R.hitTopic) +
+    (confirmed ? "　確定" : "　未確定") + "\n" +
+    "種 " + seedBar + "\n" +
+    (S.refuseAt ? "撤退 " + R.retreat + "手\n" : "") +
+    "https://towananika.github.io/game/";
+  try {
+    navigator.clipboard.writeText(t);
+    alert("コピーしました\n\n" + t);
+  } catch(e) {
+    prompt("これをコピーしてください", t);
+  }
+}
+
+
+/* ========== 確定（どれが合っているかは言わない） ========== */
+function verdict(msg){
+  var left = 3 - tries;
+  var h = steps(3) + '<div class="sub">段階'+S.n+'　'+PEOPLE[S.who].label+'</div>';
+  h += '<h2>確定する</h2><div class="note" style="margin-top:0">'+
+    '話したあとで、もう一度答えます。<b>3つ全部が合って、はじめて確定します。</b>'+
+    'どれが合っているかは言いません。</div>';
+  h += '<div class="card"><div class="q">機嫌</div><div class="opts" data-k="mood">'+
+       btns2(["機嫌がいい","普通","疲れている"], guess.mood)+'</div></div>';
+  h += '<div class="card"><div class="q">その原因は、あなたに関係があるか</div><div class="opts" data-k="cause">'+
+       btns2(["はい","いいえ"], guess.cause)+'</div></div>';
+  h += '<div class="card"><div class="q">いちばん出た話題</div><div class="opts" data-k="topic">'+
+       btns2(["仕事","金","家族","体調","趣味"], guess.topic)+'</div></div>';
+  if(msg) h += '<div class="card" style="border-color:var(--ng)">'+msg+'</div>';
+  h += '<button class="go" onclick="tryVerdict()">確定する（あと'+left+'回）</button>';
+  h += '<button class="ghost" onclick="reveal(false)">分からない。答えを見る</button>';
+  el(h);
+  document.querySelectorAll(".opts").forEach(function(g){
+    g.onclick = function(e){
+      if(e.target.tagName !== "BUTTON") return;
+      g.querySelectorAll("button").forEach(function(b){ b.classList.remove("sel"); });
+      e.target.classList.add("sel");
+      guess[g.dataset.k] = e.target.dataset.v;
+    };
+  });
+}
+function btns2(a, sel){
+  return a.map(function(v){
+    return '<button class="'+(v===sel?"sel":"")+'" data-v="'+v+'">'+v+'</button>';
+  }).join("");
+}
+function tryVerdict(){
+  tries++;
+  var n = (guess.mood===S.truth.mood?1:0) + (guess.cause===S.truth.cause?1:0) +
+          (guess.topic===S.truth.topic?1:0);
+  if(n === 3){ reveal(true); return; }
+  if(tries >= 3){ reveal(false); return; }
+  verdict('3つのうち <b>'+n+'つ</b> が合っています。どれかは言いません。');
 }
 
 /* ================= 記録 ================= */
