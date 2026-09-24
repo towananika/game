@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>現実女子 — 試作</title>
+<style>
+:root{--bg:#14110f;--fg:#ece5dd;--dim:#9a9088;--line:#2e2924;--wood:#c8a87c;--ok:#7fb069;--ng:#c96f6f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.8 "Hiragino Sans","Yu Gothic",sans-serif;
+ display:flex;justify-content:center;padding:20px 16px 60px}
+.wrap{width:100%;max-width:560px}
+h1{font-size:17px;margin:0 0 2px;font-weight:600}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:22px}
+.card{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.q{font-size:13px;color:var(--dim);margin-bottom:8px}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;background:none;color:var(--fg);border:1px solid var(--line);
+ border-radius:7px;padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--wood)}
+button.sel{background:var(--wood);color:#14110f;border-color:var(--wood)}
+.go{width:100%;margin-top:6px;padding:12px;border-color:var(--wood);color:var(--wood)}
+.go:disabled{opacity:.3;cursor:default;border-color:var(--line);color:var(--dim)}
+.log{margin-bottom:14px}
+.row{margin-bottom:14px}
+.who{font-size:11.5px;color:var(--dim);margin-bottom:2px}
+.me .bub{background:#232019}
+.bub{padding:9px 13px;border-radius:10px;background:#1d1a17;display:inline-block;max-width:92%;white-space:pre-wrap}
+.me{text-align:right}
+input{width:100%;background:#1a1714;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
+textarea{width:100%;background:#1a1714;color:var(--fg);border:1px solid var(--line);
+ border-radius:8px;padding:10px;font:inherit;resize:vertical;min-height:58px}
+.bar{display:flex;gap:8px;margin-top:8px;align-items:center}
+.bar button{flex:0 0 auto}
+.bar .send{flex:1;border-color:var(--wood);color:var(--wood)}
+.cnt{color:var(--dim);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td{padding:6px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.ok{color:var(--ok)}.ng{color:var(--ng)}
+.note{font-size:12px;color:var(--dim);line-height:1.75;margin-top:10px}
+.hide{display:none}
+.seed{font-size:13.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.seed.got{color:var(--ok)}
+.seed.miss{color:var(--dim)}
+h2{font-size:14px;margin:22px 0 8px;color:var(--wood);font-weight:600}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>現実女子 — 試作</h1>
+<div class="sub">段階3（感情を全部は言わない）／ユキ・27歳／10往復</div>
+
+<div id="s1">
+  <div class="card">
+    <div class="q">呼ばれたい名前（空のままでもいい）</div>
+    <input id="pname" placeholder="せんぱい">
+  </div>
+  <div class="card">
+    <div class="q">今日の彼女の機嫌は</div>
+    <div class="opts" data-k="mood">
+      <button data-v="機嫌がいい">機嫌がいい</button>
+      <button data-v="普通">普通</button>
+      <button data-v="疲れている">疲れている</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="q">その原因は、あなたに関係があるか</div>
+    <div class="opts" data-k="cause">
+      <button data-v="はい">はい</button>
+      <button data-v="いいえ">いいえ</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="q">今日いちばん出る話題は</div>
+    <div class="opts" data-k="topic">
+      <button data-v="仕事">仕事</button><button data-v="金">金</button>
+      <button data-v="家族">家族</button><button data-v="体調">体調</button>
+      <button data-v="趣味">趣味</button>
+    </div>
+  </div>
+  <button class="go" id="start" disabled>伏せて、始める</button>
+  <div class="note">3つとも選ぶと始められます。会話中は何も表示されません。</div>
+</div>
+
+<div id="s2" class="hide">
+  <div class="log" id="log"></div>
+  <div id="inbox">
+    <textarea id="inp" placeholder="そのまま書く（選択肢はありません）"></textarea>
+    <div class="bar">
+      <button class="send" id="send">送る</button>
+      <button id="read">読む（1回）</button>
+      <span class="cnt" id="cnt">1 / 10</span>
+    </div>
+  </div>
+</div>
+
+<div id="s3" class="hide"></div>
+
+<div class="note" style="margin-top:34px;border-top:1px solid var(--line);padding-top:16px">
+これは恋愛ゲームではありません。<b>相手を落とすのではなく、相手を当てるゲーム</b>です。<br>
+漫画やアニメの女性像は、こちらのために存在します。現実の人は違います。自分の一日があり、
+不機嫌の理由はたいていこちらと関係がありません。<br>
+ここでは、その<b>ずれ</b>だけを練習します。予測がすべて当たっても、彼女の態度は変わりません。<br><br>
+入力した内容はどこにも送られません。端末の中だけで動きます。
+</div>
+
+<script>
+/* ユキ（段階3）
+   真実: 機嫌=疲れている / 原因=いいえ（仕事） / 話題=金
+   種: 1 名前を呼ぶ / 2 考える間 / 3 疲れると敬語 / 4 金額を細かく / 5 褒めると話題を変える */
+var TRUTH = {mood:"疲れている", cause:"いいえ", topic:"金"};
+
+var LINES = [
+ {t:"あ、{N}。おつかれさまです", k:["おつかれ","仕事"], seed:[1]},
+ {t:"……うん、まあ。今日は棚卸しがあって", k:["棚卸し","今日","仕事"], seed:[2]},
+ {t:"数が合わなくて。3,200ウォンだけ、どうしても", k:["3,200","3200","数","ウォン","合わ"], seed:[4]},
+ {t:"いや、金額の問題じゃないんですけどね。合わないのが", k:["金額","合わ"], seed:[3,4]},
+ {t:"……{N}は、そういうの気になるほうですか", k:["気になる"], seed:[1,2]},
+ {t:"そうなんだ。わたしは、けっこう引きずるので", k:["引きずる","わたし"], seed:[]},
+ {t:"昼も食べそびれて。コンビニで4,800ウォン使ったんですけど、あれ高いですよね", k:["昼","コンビニ","4,800","4800","高い"], seed:[3,4]},
+ {t:"……", k:[], seed:[2]},
+ {t:"あ、ごめんなさい。ぼーっとしてました", k:["ごめん","ぼーっと"], seed:[3]},
+ {t:"……もう上がります。おつかれさまでした、{N}", k:["上が","おつかれ"], seed:[1,3]}
+];
+var PRAISE = /すご|えら|かわい|きれい|優し|やさし|立派|さすが|素敵|いい人/;
+var DEFLECT = "……そんなことないです。それより、{N}のほうはどうでした？";
+
+var THINK = ["早く帰りたい","話を切りたい","仕事のことを考えている","あなたに気がある","怒っている","何も考えていない"];
+var NAME = "せんぱい";
+function fill(t){ return t.split("{N}").join(NAME); }
+var pred = {}, turn = 0, mine = [], readAt = null, readVal = null, seeds = {};
+
+document.querySelectorAll(".opts").forEach(function(g){
+  g.addEventListener("click", function(e){
+    if(e.target.tagName !== "BUTTON") return;
+    g.querySelectorAll("button").forEach(function(b){ b.classList.remove("sel"); });
+    e.target.classList.add("sel");
+    pred[g.dataset.k] = e.target.dataset.v;
+    document.getElementById("start").disabled = !(pred.mood && pred.cause && pred.topic);
+  });
+});
+
+function say(who, text, me){
+  var d = document.createElement("div");
+  d.className = "row" + (me ? " me" : "");
+  var w = document.createElement("div"); w.className = "who"; w.textContent = who;
+  var b = document.createElement("div"); b.className = "bub"; b.textContent = text;
+  d.appendChild(w); d.appendChild(b);
+  document.getElementById("log").appendChild(d);
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+document.getElementById("start").onclick = function(){
+  document.getElementById("s1").className = "hide";
+  document.getElementById("s2").className = "";
+  var nm = document.getElementById("pname").value.trim();
+  NAME = nm ? nm + "さん" : "せんぱい";
+  say("ユキ", fill(LINES[0].t));
+  LINES[0].seed.forEach(function(s){ seeds[s] = 1; });
+};
+
+document.getElementById("read").onclick = function(){
+  if(readAt !== null) return;
+  var v = prompt("今、ユキは何を考えていると思いますか？\n\n" +
+    THINK.map(function(t,i){ return (i+1) + ". " + t; }).join("\n"));
+  var n = parseInt(v, 10);
+  if(!n || n < 1 || n > THINK.length) return;
+  readVal = THINK[n-1];
+  readAt = turn + 1;
+  this.textContent = "読んだ（" + readAt + "手目）";
+  this.disabled = true;
+};
+
+document.getElementById("send").onclick = function(){
+  var v = document.getElementById("inp").value.trim();
+  if(!v) return;
+  mine.push({text:v, prev:LINES[turn].k});
+  say("あなた", v, true);
+  document.getElementById("inp").value = "";
+  var praised = PRAISE.test(v);
+  turn++;
+  if(turn >= LINES.length){ finish(); return; }
+  var nx = praised ? {t:DEFLECT, k:[], seed:[5,1]} : LINES[turn];
+  document.getElementById("cnt").textContent = (turn+1) + " / 10";
+  setTimeout(function(){
+    say("ユキ", fill(nx.t));
+    nx.seed.forEach(function(s){ seeds[s] = 1; });
+  }, 500);
+};
+
+var SEED_NAME = {1:"人の名前を覚えていて、呼ぶ", 2:"考えてから話すので、間がある",
+ 3:"疲れると敬語に戻る", 4:"金額を細かく覚えている", 5:"褒められると話題を変える"};
+var ME = /私|僕|俺|自分|わたし|ぼく/;
+var OPEN = /[?？]/;
+var CLOSED = /(ですか|ますか|だよね|でしょ)[?？]?$/;
+
+function finish(){
+  var utt = mine.length;
+  var selfTalk = mine.filter(function(m){ return ME.test(m.text); }).length;
+  var pick = mine.filter(function(m){
+    return m.prev.some(function(k){ return m.text.indexOf(k) >= 0; });
+  }).length;
+  var qs = mine.filter(function(m){ return OPEN.test(m.text); }).length;
+  var closed = mine.filter(function(m){ return CLOSED.test(m.text); }).length;
+  var avg = Math.round(mine.reduce(function(a,m){ return a + m.text.length; }, 0) / utt);
+
+  function mark(a,b){ return a === b ? '<span class="ok">○</span>' : '<span class="ng">✗</span>'; }
+
+  var h = '<h2>答え合わせ</h2><table>' +
+    '<tr><td>機嫌</td><td>' + pred.mood + ' → ' + TRUTH.mood + ' ' + mark(pred.mood, TRUTH.mood) + '</td></tr>' +
+    '<tr><td>原因はあなたか</td><td>' + pred.cause + ' → ' + TRUTH.cause + ' ' + mark(pred.cause, TRUTH.cause) + '</td></tr>' +
+    '<tr><td>話題</td><td>' + pred.topic + ' → ' + TRUTH.topic + ' ' + mark(pred.topic, TRUTH.topic) + '</td></tr>';
+  if(readVal) h += '<tr><td>読み（' + readAt + '手目）</td><td>' + readVal + '</td></tr>';
+  h += '</table>';
+  if(pred.cause === "はい"){
+    h += '<div class="note">原因はあなたではありませんでした。<b>棚卸しで数が合わず、昼を食べていません。</b>' +
+         '反応の理由を自分に置く癖が出ています。</div>';
+  }
+
+  h += '<h2>固有性の種</h2>';
+  for(var i = 1; i <= 5; i++){
+    var got = !!seeds[i];
+    h += '<div class="seed ' + (got ? "got" : "miss") + '">' +
+         (got ? "見えた" : "出なかった") + '　' + SEED_NAME[i] + '</div>';
+  }
+  h += '<div class="note">これは点数ではありません。<b>そこに何があったか</b>の一覧です。</div>';
+
+  h += '<h2>あなたの動き</h2><table>' +
+    '<tr><td>自分語り率</td><td>' + Math.round(selfTalk/utt*100) + '%（' + selfTalk + '/' + utt + '）</td></tr>' +
+    '<tr><td>拾い率</td><td>' + Math.round(pick/utt*100) + '%（' + pick + '/' + utt + '）</td></tr>' +
+    '<tr><td>質問した回数</td><td>' + qs + '　うち閉じた形 ' + closed + '</td></tr>' +
+    '<tr><td>一言の長さ</td><td>' + avg + '字</td></tr>' +
+    '</table><div class="note">評価はしません。並べるだけです。次回また同じ数字が出ます。</div>';
+
+  h += '<h2>気づいたこと</h2><div class="card"><div class="q">ユキについて、自分の気分を入れずに書く</div>' +
+       '<textarea placeholder="例: 金額を細かく覚えている"></textarea></div>';
+  h += '<h2>宿題</h2><div class="card">今日か明日、誰かの話を<b>自分の話に戻さずに3往復</b>聞く。</div>';
+  h += '<button class="go" id="again">もう一度</button>';
+
+  document.getElementById("s2").className = "hide";
+  var s3 = document.getElementById("s3");
+  s3.className = "";
+  s3.innerHTML = h;
+  document.getElementById("again").onclick = function(){ location.reload(); };
+  window.scrollTo(0, 0);
+}
+</script>
+</div></body></html>
