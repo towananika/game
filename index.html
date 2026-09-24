@@ -49,6 +49,11 @@ td:last-child{text-align:right}
 .big{font-size:26px;color:var(--wood);font-weight:600;line-height:1.3}
 .thinking{color:var(--dim);font-size:13px;padding:4px 2px}
 .best{border:1px solid var(--ok);border-radius:8px;padding:11px;margin-top:10px;color:var(--ok);font-size:13.5px}
+.steps{display:flex;gap:6px;margin-bottom:16px;font-size:11.5px;color:#5d564f}
+.steps span{flex:1;text-align:center;padding:5px 2px;border-bottom:2px solid var(--line)}
+.steps span.on{color:var(--wood);border-color:var(--wood)}
+.hint{font-size:15px;padding:9px 0;border-bottom:1px solid var(--line)}
+.hint:before{content:"・";color:var(--wood)}
 .foot{font-size:12px;color:var(--dim);line-height:1.75;margin-top:34px;border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
@@ -89,6 +94,8 @@ var STAGES = [
   n:1, ratio:"100 : 0", name:"助けてくれる人",
   learn:"止まらずに続ける", dial:"—", delay:[300,600],
   truth:{mood:"機嫌がいい", cause:"いいえ", topic:"趣味"},
+  scene:["鼻歌が聞こえる","髪が少し濡れている","机に見たことのないマグカップがある"],
+  why:"朝いちばんに銭湯へ行き、その帰りに食器の店に寄ってきた。機嫌がいい理由は、あなたと関係ない。",
   lines:[
    {t:"あ、{N}！ おつかれさまです〜", k:["おつかれ"], s:[1]},
    {t:"今日ですか？ 今日はもう、すごく楽しかったです！ 銭湯に行ってきて", k:["銭湯","今日","楽し"], s:[]},
@@ -106,6 +113,8 @@ var STAGES = [
   n:2, ratio:"95 : 5", name:"あなたが出す番が来る",
   learn:"自分から出す", dial:"—", delay:[400,800],
   truth:{mood:"普通", cause:"いいえ", topic:"趣味"},
+  scene:["いつもと同じ時間に来た","イヤホンをつけたまま席に着いた","机の上が片づいている"],
+  why:"特に何も起きていない日。イヤホンは通勤のポッドキャスト。何もない日は、話題も向こうからは出てこない。",
   lines:[
    {t:"おつかれさまです、{N}", k:["おつかれ"], s:[1]},
    {t:"はい、まあ、ふつうです。特に何も", k:["ふつう","特に"], s:[]},
@@ -123,6 +132,8 @@ var STAGES = [
   n:3, ratio:"85 : 15", name:"気持ちを全部は言わない",
   learn:"察する／聞く", dial:"A 感情の説明", delay:[500,1100],
   truth:{mood:"疲れている", cause:"いいえ", topic:"金"},
+  scene:["電卓を何度も叩き直している","昼に一度も席を立たなかった","帳簿を3回開き直した"],
+  why:"棚卸しで3,200ウォンが合わず、昼も食べていない。疲れの原因は数字であって、あなたではない。",
   lines:[
    {t:"あ、{N}。おつかれさまです", k:["おつかれ"], s:[1]},
    {t:"……うん、まあ。今日は棚卸しがあって", k:["棚卸し","今日"], s:[2]},
@@ -140,6 +151,8 @@ var STAGES = [
   n:4, ratio:"75 : 25", name:"返事が遅れる",
   learn:"待つ・埋めない", dial:"B 応答", delay:[4000,10000],
   truth:{mood:"普通", cause:"いいえ", topic:"仕事"},
+  scene:["書類の山が机の半分を占めている","電話がひっきりなしに鳴っている","こちらを見ずに返事をした"],
+  why:"月末の請求書の締め。機嫌が悪いのではなく、単に手が離せない。返事が遅いのは、そういう日だから。",
   lines:[
    {t:"おつかれさまです", k:["おつかれ"], s:[]},
    {t:"……すみません、いま請求書の締めで", k:["請求書","締め"], s:[2,3]},
@@ -157,6 +170,8 @@ var STAGES = [
   n:9, ratio:"15 : 85", name:"断る",
   learn:"引く。食い下がらない", dial:"G 拒絶", delay:[1500,4000],
   truth:{mood:"疲れている", cause:"いいえ", topic:"仕事"},
+  scene:["今週3回、遅くまで残っているのを見た","土曜の当番表に名前がある","挨拶の声がいつもより小さい"],
+  why:"今週ずっと残業で、土曜も出る。断られたのは予定が埋まっているからで、あなたが嫌われたからではない。",
   refuseAt:5,
   lines:[
    {t:"おつかれさまです", k:["おつかれ"], s:[]},
@@ -208,6 +223,12 @@ function clearCount(n){ return db().hist.filter(function(h){ return h.stage===n;
 
 var app = document.getElementById("app");
 function el(h){ app.innerHTML = h; window.scrollTo(0,0); }
+function steps(on){
+  var a = ["様子を見る","予測する","話す","答え合わせ"];
+  return '<div class="steps">' + a.map(function(t,i){
+    return '<span class="'+(i===on?"on":"")+'">'+(i+1)+'　'+t+'</span>';
+  }).join("") + '</div>';
+}
 
 /* ================= ホーム ================= */
 function home(){
@@ -219,6 +240,14 @@ function home(){
     '<div class="q">見えた数</div><div class="big">'+d.seen+'</div>'+
     '<div class="note" style="margin-top:2px">減りません。失敗しても残ります</div></div>';
 
+  if(!d.hist.length){
+    h += '<h2>遊び方</h2><div class="card">'+
+      '<div class="hint">彼女の<b>今日の様子</b>を3つ見る</div>'+
+      '<div class="hint">そこから<b>機嫌・原因・話題</b>を予測して、伏せる</div>'+
+      '<div class="hint">10往復だけ話す（途中では何も分かりません）</div>'+
+      '<div class="hint">答え合わせ。<b>なぜそうだったか</b>が明かされる</div>'+
+      '<div class="note">当てるのは彼女の気持ちです。<b>好かれることは目的ではありません。</b></div></div>';
+  }
   h += '<h2>段階</h2>';
   [1,2,3,4,5,6,7,8,9,10].forEach(function(n){
     var s = stageOf(n);
@@ -244,7 +273,7 @@ function home(){
       h += '<div class="note" style="margin-top:18px">今日はもう'+todays+'回遊びました。'+
            '<b>1日1回までにしてください。</b>ここが現実の代わりになったら、この企画は失敗です。</div>';
     }
-    h += '<button class="go" onclick="pick()">はじめる（段階'+d.stage+'）</button>';
+    h += '<button class="go" onclick="scene()">はじめる（段階'+d.stage+'）</button>';
     if(d.stage > 1) h += '<button class="ghost" onclick="down()">段階を下げる</button>';
     if(clearCount(d.stage) >= 3 && stageOf(d.stage + 1)) h += '<button class="ghost" onclick="up()">段階を上げる</button>';
     else if(clearCount(d.stage) >= 3) h += '<div class="note">次の段階はまだ作っていません。</div>';
@@ -259,12 +288,26 @@ function hwDone(){ var d = db(); d.hw = true; save(d); home(); }
 /* ================= 予測 ================= */
 var pred, S, NAME, turn, mine, seeds, readAt, readVal, refused, pushes, withdrew;
 
+function scene(){
+  var d = db();
+  S = stageOf(d.stage);
+  var h = steps(0) + '<div class="sub">段階'+S.n+'　'+S.name+'</div>';
+  h += '<div class="card"><div class="q">今日のユキの様子</div>';
+  S.scene.forEach(function(t){ h += '<div class="hint">'+t+'</div>'; });
+  h += '<div class="note">これだけが手がかりです。<b>気持ちは書かれていません。</b>'+
+       '見えることから、中を読みます。</div></div>';
+  h += '<button class="go" onclick="pick()">見た。予測する</button>';
+  h += '<button class="ghost" onclick="home()">やめる</button>';
+  el(h);
+}
+
 function pick(){
   var d = db();
   S = stageOf(d.stage);
   pred = {};
-  var h = '<div class="sub">段階'+S.n+'　'+S.name+'　（虚構 '+S.ratio+' 現実）</div>';
-  h += '<div class="card"><div class="q">今日の技（これだけ練習する）</div>'+
+  var h = steps(1) + '<div class="card"><div class="q">さっき見た様子</div>' +
+    S.scene.map(function(t){ return '<div class="hint">'+t+'</div>'; }).join("") + '</div>';
+  h += '<div class="card"><div class="q">今日の技（会話で、これだけ練習する）</div>'+
        '<div style="font-size:14.5px">'+S.learn+'</div></div>';
   h += '<div class="card"><div class="q">呼ばれたい名前</div>'+
        '<input id="pname" placeholder="せんぱい" value="'+(d.name||"")+'"></div>';
@@ -303,7 +346,7 @@ function begin(){
   turn = 0; mine = []; seeds = {}; readAt = null; readVal = null;
   refused = false; pushes = 0; withdrew = null;
 
-  el('<div class="sub">段階'+S.n+'　技: '+S.learn+'</div>'+
+  el(steps(2) + '<div class="sub">今日の技: '+S.learn+'　（10往復）</div>'+
      '<div id="log"></div>'+
      '<div><textarea id="inp" placeholder="そのまま書く（選択肢はありません）"></textarea>'+
      '<div class="bar"><button class="send" id="send">送る</button>'+
@@ -423,12 +466,16 @@ function finish(){
   save(d);
 
   function mk(ok){ return ok ? '<span class="ok">○</span>' : '<span class="ng">✗</span>'; }
-  var h = '<h2>答え合わせ</h2><table>'+
+  var h = steps(3) + '<h2>答え合わせ</h2><table>'+
     '<tr><td>機嫌</td><td>'+pred.mood+' → '+S.truth.mood+' '+mk(hitMood)+'</td></tr>'+
     '<tr><td>原因はあなたか</td><td>'+pred.cause+' → '+S.truth.cause+' '+mk(hitCause)+'</td></tr>'+
     '<tr><td>話題</td><td>'+pred.topic+' → '+S.truth.topic+' '+mk(hitTopic)+'</td></tr>';
   if(readVal) h += '<tr><td>読み（'+readAt+'手目）</td><td>'+readVal+'</td></tr>';
   h += '</table>';
+
+  h += '<div class="card" style="margin-top:12px"><div class="q">なぜそうだったか</div>'+
+       '<div style="font-size:14px">'+S.why+'</div>'+
+       '<div class="note">さっきの3つの様子に、全部出ていました。</div></div>';
 
   if(!hitCause && pred.cause === "はい"){
     h += '<div class="note">原因はあなたではありませんでした。'+
