@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ちいさな声 — TRIATHLON 第1話</title>
+<meta name="description" content="一歩目は、思っていたより小さくていい。15分で終わる、選ぶだけの短いお話。">
+<style>
+  :root{ --bg:#141a1e; --surface:#1c2429; --line:#2c373d; --text:#e8e4da; --muted:#93a0a6;
+         --wood:#c99f74; --sage:#9dbd97; --water:#7fa7bd; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Mincho ProN","Yu Mincho",serif;
+    display:flex;flex-direction:column;align-items:center;
+    padding:18px 16px 28px;gap:16px;line-height:1.95;font-size:16.5px;
+    background-image:radial-gradient(120% 70% at 50% 0%,#1b262c 0%,#141a1e 70%);}
+  main{width:100%;max-width:560px;flex:1;display:flex;flex-direction:column;gap:16px}
+  header{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:baseline}
+  h1{font-size:13px;letter-spacing:.34em;color:var(--muted);font-weight:400}
+  header em{font-style:normal;font-size:11px;color:var(--muted);letter-spacing:.1em}
+
+  .lake{width:100%;max-width:560px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+  .lake i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--wood),var(--sage));
+    transition:width .8s cubic-bezier(.2,.8,.2,1)}
+
+  .text{white-space:pre-wrap}
+  .text p{opacity:0;transform:translateY(6px);animation:rise .9s ease forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .voice{color:var(--water);padding-left:14px;border-left:2px solid var(--line);font-style:italic}
+  .q{font-size:13px;letter-spacing:.12em;color:var(--muted);margin-top:6px}
+
+  .choices{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+  button.c{font:inherit;font-size:16px;text-align:left;cursor:pointer;color:var(--text);
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 17px;
+    transition:border-color .25s,transform .06s,background .25s}
+  button.c:hover{border-color:var(--wood)}
+  button.c:active{transform:scale(.99)}
+  button.c small{display:block;font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.04em}
+
+  .end{text-align:center;padding:34px 0 10px}
+  .end .take{font-size:21px;line-height:2;color:var(--wood)}
+  .care{font-size:12.5px;color:var(--muted);line-height:2;border-top:1px solid var(--line);
+    padding-top:16px;margin-top:26px;text-align:left}
+  footer{font-size:11.5px;color:var(--muted);letter-spacing:.08em}
+  a{color:var(--sage)}
+  .mute{position:fixed;right:12px;top:12px;font:inherit;font-size:11px;letter-spacing:.1em;
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:5px 11px;cursor:pointer}
+</style>
+</head>
+<body>
+<button class="mute" id="mute">音 なし</button>
+<header><h1>ち い さ な 声</h1><em id="step"></em></header>
+<div class="lake"><i id="fill"></i></div>
+<main id="view"></main>
+<footer>TRIATHLON 第1話</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== 音 ===== 一歩・音の机と同じ作り */
+var ctx=null,bus=null,ON=false;
+function AC(){
+  if(!ctx){
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    var g=ctx.createGain(); g.gain.value=60;
+    var ws=ctx.createWaveShaper(),n=2048,c=new Float32Array(n),t=Math.tanh(8);
+    for(var i=0;i<n;i++){var x=i/(n-1)*2-1;c[i]=Math.tanh(8*x)/t;}
+    ws.curve=c; ws.oversample="4x";
+    var cp=ctx.createDynamicsCompressor();
+    cp.threshold.value=-14; cp.knee.value=2; cp.ratio.value=12; cp.attack.value=.003; cp.release.value=.1;
+    var o=ctx.createGain(); o.gain.value=(matchMedia("(pointer: coarse)").matches?1.1:.62);
+    g.connect(ws).connect(cp).connect(o).connect(ctx.destination); bus=g;
+  }
+  if(ctx.state==="suspended") ctx.resume();
+  return ctx;
+}
+function ring(at,f,q,dur,peak,atk){
+  var c=AC(),len=Math.max(1,Math.floor(c.sampleRate*dur));
+  var b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);
+  var exc=Math.max(1,Math.floor(c.sampleRate*atk));
+  for(var i=0;i<len;i++) d[i]=i<exc?.5*(1-Math.cos(2*Math.PI*i/exc)):0;
+  var s=c.createBufferSource(); s.buffer=b;
+  var bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f; bp.Q.value=q;
+  var g=c.createGain(); g.gain.setValueAtTime(peak,at); g.gain.exponentialRampToValueAtTime(.0004,at+dur);
+  s.connect(bp).connect(g).connect(bus); s.start(at); s.stop(at+dur+.005);
+}
+var WOOD=[[392,16,.5,.52],[560,15,.38,.30],[790,13,.25,.22],[1050,10,.13,.10],[1480,8,.08,.05]];
+var METAL=[[1600,20,.03,.45],[2450,18,.02,.28],[3600,14,.012,.14]];
+function hit(at,amp,pitch,modes,atk){ if(!ON)return; modes.forEach(function(m){ ring(at,m[0]*(pitch||1),m[1],m[2],m[3]*amp,atk||.004); }); }
+function knock(){ hit(AC().currentTime,.30,1,WOOD); }                 /* 選んだとき */
+function chime(){ hit(AC().currentTime,.34,1,METAL,.0006); }          /* とどいたとき */
+function step(){ if(!ON)return; var t=AC().currentTime;              /* 一歩 */
+  for(var i=0;i<10;i++){var k=i/9; hit(t,.42+(.12-.42)*k,1+.05*k,WOOD); t+=.02+(.04-.02)*k;}
+  hit(t+.016,.4,1,METAL,.0006); }
+var mute=document.getElementById("mute");
+mute.onclick=function(){ ON=!ON; mute.textContent=ON?"音 あり":"音 なし"; if(ON){AC();knock();} };
+
+/* ===== 進み具合 ===== */
+var view=document.getElementById("view"),fill=document.getElementById("fill"),stepEl=document.getElementById("step");
+var seen={};                       /* 選んだものを覚える */
+function progress(p){ fill.style.width=(p*100)+"%"; }
+
+function el(tag,cls,txt){ var e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
+function render(node){
+  view.innerHTML=""; window.scrollTo(0,0);
+  progress(node.p||0); stepEl.textContent=node.label||"";
+  var box=el("div","text");
+  (node.text||[]).forEach(function(line,i){
+    var quote=line.charAt(0)===">";
+    var p=el("p",quote?"voice":null,quote?line.replace(/^>[ \t]?/gm,""):line);
+    p.style.animationDelay=(i*.22)+"s"; box.appendChild(p);
+  });
+  view.appendChild(box);
+  if(node.q){ view.appendChild(el("p","q",node.q)); }
+  var cs=el("div","choices");
+  (node.choices||[]).forEach(function(ch){
+    var b=el("button","c"); b.appendChild(document.createTextNode(ch.t));
+    if(ch.sub) b.appendChild(el("small",null,ch.sub));
+    b.onclick=function(){ if(ch.mark) seen[ch.mark]=true; (ch.sfx||knock)(); go(ch.to); };
+    cs.appendChild(b);
+  });
+  view.appendChild(cs);
+  if(node.end) ending();
+}
+
+/* ===== 本文 ===== game/story/tri_ep01_chiisana_koe.md */
+var S={};
+
+S.gate={ p:0, label:"はじめる前に",
+  text:["このお話には、「助けを求めたのに、ひとりにされた」記憶が、少しだけ出てきます。",
+        "思い出す場面は、見るか見ないかを、あとで選べます。",
+        "15分くらいで終わります。途中でやめても、何も失われません。"],
+  choices:[{t:"はじめる",to:"s1"}] };
+
+S.s1={ p:.08, label:"1／5  夜の湖",
+  text:["目が、さめた。",
+        "火は、ちいさくなってた。\nみんな、ねむってた。",
+        "湖は、しずかだった。\n風がやむと、水が、鏡になる。",
+        "わたしだけ、起きてた。"],
+  q:"なにを見る？",
+  choices:[
+    {t:"火",   to:"s1a"},
+    {t:"湖",   to:"s1b"},
+    {t:"みんな",to:"s1c"}] };
+
+S.s1a={ p:.16, label:"1／5  夜の湖", text:["あと少しで、消えそう。"], choices:[{t:"…",to:"s2"}] };
+S.s1b={ p:.16, label:"1／5  夜の湖", text:["空が、水の中にもある。\nわたしは、どっちにもいない気がした。"], choices:[{t:"…",to:"s2"}] };
+S.s1c={ p:.16, label:"1／5  夜の湖", text:["マキの寝息が、聞こえる。\nすぐそこなのに、遠い。"], choices:[{t:"…",to:"s2"}] };
+
+S.s2={ p:.26, label:"2／5  心の中の声",
+  text:["胸のまんなかが、つめたかった。",
+        "こわい夢を見た、わけじゃない。\nただ、ひとりで起きてることが、こわかった。",
+        "起こせばいい。\nそれだけなのに。",
+        "頭のなかで、声がした。",
+        "> 言っても、どうせ行ってしまうよ。"],
+  q:"思い出す？",
+  choices:[
+    {t:"思い出す",   sub:"3行だけ。場面は出てきません",to:"s2a"},
+    {t:"思い出さない",sub:"話は同じように進みます",    to:"s2b"}] };
+
+S.s2a={ p:.34, label:"2／5  心の中の声",
+  text:["むかし、一度だけ、言ったことがある。\n「たすけて」って。",
+        "その人は、ふりむいた。\nそれから——行ってしまった。",
+        "言葉は、とどいてた。\nでも、とどいただけだった。"],
+  choices:[{t:"…",to:"s2b"}] };
+
+S.s2b={ p:.40, label:"2／5  心の中の声",
+  text:["声は、もう一度言った。",
+        "> 言っても、どうせ行ってしまうよ。"],
+  q:"その声に、なんて返す？",
+  choices:[
+    {t:"「……そうだね」",  to:"s2c"},
+    {t:"「前は、そうだった」",to:"s2c"}] };
+
+S.s2c={ p:.46, label:"2／5  心の中の声",
+  text:["ちいさな灯りみたいな考えが、ひとつ浮かんだ。",
+        "> 前は、そうだった。\n> でも、ここにいるのは、あの人じゃない。"],
+  q:"この考えを、持っておく？",
+  choices:[
+    {t:"持っておく", to:"s2d1"},
+    {t:"まだ持てない",to:"s2d2"}] };
+
+S.s2d1={ p:.52, label:"2／5", text:["うん。ちょっとだけ、持っとく。"], choices:[{t:"…",to:"s3"}] };
+S.s2d2={ p:.52, label:"2／5", text:["まだ、にぎれない。\n……でも、捨てなくていい。"], choices:[{t:"…",to:"s3"}] };
+
+S.s3={ p:.60, label:"3／5  言う練習",
+  text:["マキの肩まで、手をのばせば、とどく。",
+        "でも、手は、うごかなかった。",
+        "声なら、出せるかもしれない。\nちいさい声なら。"],
+  q:"どのくらいの声で言う？",
+  choices:[
+    {t:"ささやく",sub:"いちばん小さい", mark:"whisper", to:"s3a"},
+    {t:"ふつうに",                       to:"s3b"},
+    {t:"はっきり",                       to:"s3c"}] };
+
+S.s3a={ p:.68, label:"3／5", text:["「……たすけて」",
+  "自分でも、聞こえるか聞こえないか、くらいの声。"], choices:[{t:"…",to:"s4"}] };
+S.s3b={ p:.68, label:"3／5", text:["「……たすけて」",
+  "言ってから、声がふるえてたことに気づいた。"], choices:[{t:"…",to:"s4"}] };
+S.s3c={ p:.68, label:"3／5", text:["「たすけて」",
+  "言えた。のに、胸はまだ、どきどきしてた。"], choices:[{t:"…",to:"s4"}] };
+
+function s4(){
+  var t=["しずかだった。","やっぱり——と、思いかけた。","そのとき。","「……亞美？」","マキの目が、あいてた。"];
+  if(seen.whisper) t.push("「いまの、亞美の声だよね。\nちいさかったけど、ちゃんと聞こえたよ」");
+  t.push("マキは、なにも聞かなかった。\n理由も、どうしたの、も。",
+         "ただ、毛布をもちあげて、となりをあけてくれた。",
+         "わたしは、そこに入った。",
+         "あったかかった。");
+  return { p:.80, label:"4／5  とどく", text:t, q:"マキに、なにか言う？",
+    choices:[
+      {t:"「ごめんね、起こして」",sfx:chime,to:"s4a"},
+      {t:"「ありがとう」",        sfx:chime,to:"s4b"},
+      {t:"なにも言わない",        sfx:chime,to:"s4c"}] };
+}
+
+S.s4a={ p:.86, label:"4／5", text:["「いいよ。起こしてくれて、よかった」","大きな声は、いらなかった。"], choices:[{t:"…",to:"s5"}] };
+S.s4b={ p:.86, label:"4／5", text:["「ん。」","マキは、もう半分ねむってた。","大きな声は、いらなかった。"], choices:[{t:"…",to:"s5"}] };
+S.s4c={ p:.86, label:"4／5", text:["マキは、わたしの手を、ぎゅっとした。","それで、ぜんぶだった。","大きな声は、いらなかった。"], choices:[{t:"…",to:"s5"}] };
+
+S.s5={ p:.94, label:"5／5  朝",
+  text:["目がさめたら、朝だった。",
+        "湖が、空の青と、木の緑を、うつしてた。",
+        "わたしは、髪を、赤いリボンで結んだ。\nちょっと曲がってた。\nマキが、なおしてくれた。",
+        "「行こう」",
+        "みんなが、歩きだした。",
+        "わたしは、一歩目の前に、いちど、ポニーテールを、ゆらしてみた。",
+        "うん。"],
+  choices:[{t:"一歩、進む",sfx:step,to:"end"}] };
+
+S.end={ p:1, label:"", text:[], end:true, choices:[] };
+
+function ending(){
+  var e=el("div","end");
+  var t=el("p","take","一歩目は、思っていたより、\nちいさくていい。");
+  t.style.whiteSpace="pre-line"; e.appendChild(t);
+  view.appendChild(e);
+  var cs=el("div","choices");
+  var again=el("button","c","もう一度あそぶ");
+  again.onclick=function(){ seen={}; knock(); go("gate"); };
+  cs.appendChild(again); view.appendChild(cs);
+  var care=el("div","care");
+  care.textContent="このお話は、相談の代わりにはなりません。\nつらさが続くときは、ひとりで抱えずに、"
+    +"お住まいの地域の相談窓口や、信頼できる人に話してみてください。";
+  view.appendChild(care);
+}
+
+function go(k){ var n=(k==="s4")?s4():S[k]; render(n); }
+go("gate");
+})();
+</script>
+</body>
+</html>
