@@ -80,6 +80,13 @@
   .sc{position:relative;width:100%;max-width:320px;aspect-ratio:3/4;border-radius:26px;background:linear-gradient(160deg,#f7f1e6,#e6dccb);color:#1b1f26;
     box-shadow:0 20px 50px #000a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:22px;text-align:center;touch-action:none;transition:transform .25s}
   .sc .big{font-size:84px;line-height:1}
+  .sc .pt{width:132px;height:132px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#ffd6e4,#f3b6cb);box-shadow:0 0 0 4px #fff,0 0 0 7px #ff8fb3}
+  .sc .pt svg{width:100%;height:auto;display:block;margin-top:-6px}
+  .sc .arc{font-size:12px;font-weight:900;color:#d4547f;letter-spacing:.08em}
+  .swipe .cont{font-size:30px;font-weight:900;color:#ff9cbd;text-align:center;letter-spacing:.2em;animation:contIn .5s both}
+  .swipe .cont small{display:block;font-size:13px;color:#fff;opacity:.8;letter-spacing:.1em;margin-top:6px}
+  @keyframes contIn{from{opacity:0;transform:scale(.8)}}
+  .tag.love{background:#ff8fb333;border-color:#ff8fb3}
   .sc p{font-size:17px;font-weight:900;line-height:1.55}
   .sc .lab{position:absolute;top:16px;font-size:15px;font-weight:900;padding:6px 12px;border-radius:12px;opacity:0;transition:opacity .1s}
   .sc .lab.l{left:14px;background:#7fc4ff;transform:rotate(-8deg)} .sc .lab.r{right:14px;background:#ffcf6e;transform:rotate(8deg)}
@@ -237,7 +244,7 @@
     {k:'study',     c:'s', i:'📚', n:'学び', say:'まなぼう', hit:['know','craft']},
     {k:'watch',     c:'w', i:'👁️', n:'見守る', say:'……', hit:[]}];
   var STAT = [['body','💪','体'],['know','🧠','知'],['craft','🔧','技'],['people','🤝','人'],['heart','❤️','心']];
-  var ICON = {kiri:'🏝️',voice:'🗣️',dreamDone:'🌟',voiceEcho:'🔔',friend:'🤝',parentDeath:'🕯️',marriage:'💍',birth:'👶',birthMore:'👶',
+  var ICON = {love:'💗',kiri:'🏝️',voice:'🗣️',dreamDone:'🌟',voiceEcho:'🔔',friend:'🤝',parentDeath:'🕯️',marriage:'💍',birth:'👶',birthMore:'👶',
     succession:'🔑',path:'🎓',crisis:'⚠️',heir:'🔑',firstYume:'🌀',job:'💼',retire:'🪑',card:'🃏',ability:'⬆️',dream:'✨'};
   var CLASS = {R:'🛡️',G:'🏹',B:'🔮'};
   var THINK = {work:'💼',study:'📖',yume:'🌀',play:'🎮',rest:'😴'};
@@ -299,7 +306,8 @@
     (h.dreams || []).slice(0,1).forEach(function(d){ tags.push('✨ ' + d.text); });
     if (h.life.job) tags.push(h.life.job.ja);
     if (h.life.tag) tags.push(h.life.tag);
-    $('tags').innerHTML = tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join('');
+    var lv = loveTag();
+    $('tags').innerHTML = tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join('') + (lv ? '<span class="tag love">' + esc(lv) + '</span>' : '');
     $('emb').textContent = h.life.avatar ? CLASS[h.life.job ? h.life.job.color : dom(h)] : '🌱';
     $('stats').innerHTML = STAT.map(function(x){
       var v = Math.round(h.ability[x[0]] * 100), up = prev && v > Math.round(prev[x[0]] * 100);
@@ -330,7 +338,8 @@
     return pool[(s.mini.episode + a) % pool.length];
   }
   function lastWords(h){
-    var t = h.voice.trust;
+    var t = h.voice.trust, v = s.mini && s.mini.love;
+    if (v && v.stage === 4) return v.name.split(' ')[1] + '、となりにいてくれてありがとう。' + (t >= .4 ? 'それと、声のあなたも。' : '');
     return t >= .6 ? 'ずっと、あなたの声が好きだった。またどこかで。' : t >= .3 ? 'あなたが誰だったのか、最後までわからなかった。でも、悪くなかった。' : '自分で決めた一生だった。……でも、ありがとう。';
   }
   function talk(text){
@@ -360,10 +369,8 @@
   // 山場のカード（Reigns）：10年に1回、左右にスワイプして声をかける。信頼が低いと、子は逆を選ぶこともある
   var EVENTS = [
     {a:[14,18], i:'🌀', t:'ゆめで知らない人に、パーティに誘われた', L:['やめておこう',{study:4, know:.04}], R:['行ってみよう',{yume:6, people:.05, avatar:1}]},
-    {a:[17,21], i:'💌', t:'ずっと気になっていた人が、目の前にいる', L:['そっと見守ろう',{heart:.04}], R:['気持ちを伝えよう',{people:.06, mood:.3, heart:.03}]},
     {a:[21,27], i:'🚆', t:'鉄道会社から「うちで運転士に」と声がかかった', L:['今の道を行こう',{study:3}], R:['乗ってみよう',{work:6, craft:.05, money:300, tag:'運転士'}]},
     {a:[20,29], i:'🎖️', t:'国を守る仕事の募集が来た', L:['見送ろう',{rest:3}], R:['志願しよう',{work:5, body:.08, heart:.03, tag:'兵士'}]},
-    {a:[24,34], i:'💍', t:'長くいっしょにいる人がいる。結婚の話が出た', L:['まだ早いよ',{work:3}], R:['いっしょに生きよう',{people:.06, mood:.4, rest:3}]},
     {a:[28,40], i:'🛡️', t:'ゆめの仲間が、赤の都市への遠征に誘ってきた', L:['家にいよう',{rest:3, people:.03}], R:['剣をとろう',{yume:8, body:.06, avatar:1}]},
     {a:[30,45], i:'✈️', t:'空を飛ぶ仕事の試験がある', L:['地に足をつけよう',{work:3}], R:['空へ行こう',{study:5, craft:.06, tag:'パイロット'}]},
     {a:[38,55], i:'🏥', t:'親が倒れたと知らせが来た', L:['仕事を続けよう',{work:4, money:200}], R:['そばにいよう',{rest:4, heart:.06, money:-200}]},
@@ -378,6 +385,74 @@
     var e = c[(s.mini.episode * 7 + from) % c.length]; used.push(EVENTS.indexOf(e));
     return { e:e, at: Math.max(from + 1, Math.min(to - 1, Math.max(e.a[0], from + 1))) };
   }
+  // 恋愛の一本道（現実の恋愛）：出会い → 告白 → すれちがい → 結婚。相手には顔と名前。続くカードは「つづく」でつなぐ
+  // 相手は恋人のあいだ spouseId だけ置き（エンジンの見合い結婚を止める）、結婚したら s.chars に入れて子が生まれるようにする
+  function loveTag(){
+    var v = s && s.mini && s.mini.love; if (!v || !v.name) return '';
+    var g = v.name.split(' ')[1];
+    return {1:'💗 ' + g + 'が気になる', 2:'💗 ' + g + 'と恋人', 3:'💗 ' + g + 'と恋人', 4:'💍 ' + g + 'と夫婦', '-1':'💔 ' + g}[v.stage] || '';
+  }
+  function makePartner(h){
+    var C = T.character, given = h.name.split(' ')[1], city = T.cities.byId(h.currentCity || h.birthCity);
+    var fams = city.names.family.filter(function(f){ return f !== h.name.split(' ')[0]; });
+    for (var i = 0; i < 12; i++){
+      var p = C.create(s.seed, h.id + '-sp' + (i ? i : ''), { cityId: city.id, familyName: fams[(s.mini.episode + i) % fams.length], age: age(h) + (i % 3), generation: h.generation, avoid: [given] });
+      if (p.sex !== h.sex || i === 11) return p;
+    }
+  }
+  function lovePt(v){ return v.p; }
+  function nextLove(h, from, to){
+    var v = s.mini.love || (s.mini.love = { stage:0 });
+    if (v.stage < 0 || v.stage >= 4) return null;
+    var at, g = v.name ? v.name.split(' ')[1] : '';
+    function grow(x){ if (v.p) v.p.age = x + (v.p.id.length % 3); return x; }
+    if (v.stage === 0 && !v.met){
+      at = Math.max(from + 1, 15); if (at > Math.min(to - 1, 19)) return null;
+      v.p = makePartner(h); v.name = v.p.name; g = v.name.split(' ')[1];
+      return { at:at, e:{ love:1, i:'🌸', pt:v.p, t:g + 'と、帰り道がいっしょになった', L:['そっとしておく',{heart:.02}], R:['話しかけよう',{people:.04, mood:.2}],
+        on:function(side){ var h = hero(), v = s.mini.love; v.met = true; v.stage = 1; v.bond = side === 'R' ? 1 : 0;
+          return side === 'R' ? [g + 'と、よく話すようになった。', '……' + g + 'って、笑うとかわいいんだ。'] : [g + 'のことを、遠くから見ていた。', '……なんでもない。'] } } };
+    }
+    if (v.stage === 1){
+      at = grow(Math.max(from + 1, 20)); if (at > to - 1 || at > 30) { if (at > 30) v.stage = -1; return null; }
+      return { at:at, e:{ love:2, i:'💌', pt:v.p, t:g + 'のことが、ずっと気になっている', L:['友だちのままで',{heart:.02}], R:['気持ちを伝えよう',{people:.05}],
+        on:function(side){ var h = hero(), v = s.mini.love;
+          if (side === 'L'){ v.stage = -1; return [g + 'とは、友だちのままでいることにした。', 'これで、よかったんだと思う。']; }
+          var ok = Math.random() < .3 + .2 * (v.bond || 0) + .4 * h.ability.people;
+          if (!ok){ v.stage = -1; h.life.mood = Math.max(0, h.life.mood - .3); return [g + 'に気持ちを伝えた。返事は「ごめんね」だった。', '……ふられちゃった。']; }
+          v.stage = 2; v.at = at; h.family.spouseId = v.p.id; h.life.mood = Math.min(1, h.life.mood + .4);
+          return [g + 'に気持ちを伝えた。「わたしも」と言ってくれた。', '……「わたしも」だって！'];
+        } } };
+    }
+    if (v.stage === 2){
+      at = grow(Math.max(from + 1, v.at + 2)); if (at > to - 1) return null;
+      return { at:at, e:{ love:3, cont:true, i:'🚉', pt:v.p, t:g + 'が、遠くの町で働くことになった', L:['待っていよう',{heart:.05}], R:['ついて行こう',{people:.03, money:-200}],
+        on:function(side){ var h = hero(), v = s.mini.love;
+          if (side === 'L' && Math.random() > .55 + .3 * h.ability.heart){ v.stage = -1; delete h.family.spouseId; return ['遠くなって、' + g + 'とは少しずつ話さなくなった。', '……さよなら、' + g + '。']; }
+          v.stage = 3; v.at = at; return side === 'L' ? ['離れていても、' + g + 'からの手紙は届きつづけた。', '手紙、また来た。'] : [g + 'を追いかけて、知らない町へ引っ越した。', 'となりにいられれば、どこでもいい。'];
+        } } };
+    }
+    if (v.stage === 3){
+      at = grow(Math.max(from + 1, v.at + 2)); if (at > to - 1) return null;
+      return { at:at, e:{ love:4, cont:true, i:'💍', pt:v.p, t:g + 'と、これからのことを話した', L:['まだ早い',{work:3}], R:['いっしょに生きよう',{people:.05, mood:.4, rest:3}],
+        on:function(side){ var h = hero(), v = s.mini.love;
+          if (side === 'L'){ if (v.wait){ v.stage = -1; delete h.family.spouseId; return [g + 'は、待ちくたびれて去っていった。', '……ばかだな、わたし。']; }
+            v.wait = true; v.at = at + 6; return ['「もう少しだけ待って」と言った。' + g + 'は、うなずいた。', 'ちゃんと、考えてるから。']; }
+          v.stage = 4; v.p.family.spouseId = h.id; v.p.age = age(h); s.chars[v.p.id] = v.p; h.family.spouseId = v.p.id;
+          return [g + 'と結婚した。', g + '、これからもよろしくね。'];
+        } } };
+    }
+    return null;
+  }
+  function nextCard(h, from, to, n, hadLove){
+    if (n >= 2) return null;
+    var lv = nextLove(h, from, to); if (lv) return lv;
+    if (hadLove) return null; // 恋の場面があった10年は、ほかの山場を出さない（タップを増やしすぎない）
+    if (s.mini.gen === to) return null; s.mini.gen = to;
+    var ev = pickEvent(h, from, to); if (ev && ev.at <= from) ev.at = from + 1;
+    return ev && ev.at <= to - 1 ? ev : null;
+  }
+
   function applyFx(h, fx, label, ev){
     var L = h.life; ['body','know','craft','people','heart'].forEach(function(k){ if (fx[k]) h.ability[k] = Math.min(1, Math.max(0, h.ability[k] + fx[k])); });
     ['study','work','yume','play','rest'].forEach(function(k){ if (fx[k] && (k !== 'yume' || L.avatar || fx.avatar)) L.counts[k] = (L.counts[k] || 0) + fx[k]; });
@@ -387,6 +462,7 @@
     if (fx.tag) L.tag = fx.tag;
     var tick = s.tick, line = age(h) + '歳　' + ev.t + '。' + label + '。';
     if (fx.kiri && Math.random() < fx.kiri){ L.kiri = true; L.scenes.push({tick:tick, kind:'kiri', text:'霧が晴れ、地図にない島が見えた。', line:line, score:1}); }
+    else if (ev.out) L.scenes.push({tick:tick, kind:'love', text:ev.out, line:line, score:.9});
     else L.scenes.push({tick:tick, kind:'voice', text:ev.t + '。' + label, line:line, score:.6});
   }
   function fxIcons(fx){
@@ -397,7 +473,7 @@
   function swipeCard(ev, done){
     var h = hero(), el = $('swipe');
     el.innerHTML = '<div class="ask2">🗣️ 声をかける</div><div class="sc" id="sc"><span class="lab l">' + esc(ev.L[0]) + '</span><span class="lab r">' + esc(ev.R[0]) + '</span>' +
-      '<div class="big">' + ev.i + '</div><p>' + esc(ev.t) + '</p><small style="font-weight:900;color:#8a7a60">' + age(h) + '歳・' + esc(h.name.split(' ')[1]) + '</small></div>' +
+      (ev.pt ? '<div class="arc">💗 恋のゆくえ ' + ev.love + '/4</div><div class="pt">' + Portrait(ev.pt, 'lv' + ev.love) + '</div>' : '<div class="big">' + ev.i + '</div>') + '<p>' + esc(ev.t) + '</p><small style="font-weight:900;color:#8a7a60">' + age(h) + '歳・' + esc(h.name.split(' ')[1]) + '</small></div>' +
       '<div class="two"><button class="l" id="bl">← ' + esc(ev.L[0]) + '<small>' + fxIcons(ev.L[1]) + '</small></button><button class="r" id="br">' + esc(ev.R[0]) + ' →<small>' + fxIcons(ev.R[1]) + '</small></button></div>';
     el.classList.add('on'); BGM.sfx('hold'); buzz(15);
     var sc = $('sc'), x0 = null, dx = 0, fin = false;
@@ -407,6 +483,7 @@
       var follow = Math.random() < h.voice.trust + 0.3 * (1 - h.voice.independence);
       var real = follow ? side : (side === 'R' ? 'L' : 'R'), opt = ev[real];
       h.voice.trust = Math.round(Math.min(1, Math.max(0, h.voice.trust + (follow ? .04 : -.02))) * 1000) / 1000;
+      var res = ev.on ? ev.on(real) : null; ev.out = res ? res[0] : null; ev.say = res ? res[1] : null;
       applyFx(h, opt[1], (follow ? '声のとおり、' : '自分で決めて、') + opt[0], ev);
       BGM.sfx(follow ? 'up' : 'down'); buzz(follow ? [10,30,10] : 40); track(follow ? 'card_follow' : 'card_refuse');
       setTimeout(function(){ el.classList.remove('on'); done(follow, opt[0]); }, 380);
@@ -471,15 +548,20 @@
     setTimeout(function(){
       s.vault.policy.voice = c.k;
       var h = hero(), t0 = s.tick, prev = JSON.parse(JSON.stringify(h.ability)), born = h.life.bornTick || 0, c0 = JSON.parse(JSON.stringify(h.life.counts));
-      var a0 = age(h), evp = h.alive ? pickEvent(h, a0, a0 + 10) : null;
-      if (evp){
-        s = T.state.advance(s, (evp.at - a0) * 4); h = hero();
-        if (h.alive){ busy = true; return swipeCard(evp.e, function(follow, label){
-          talk(follow ? '……うん、そうする。' : 'ごめん、自分で決めたい。');
-          s = T.state.advance(s, Math.max(0, (a0 + 10 - evp.at) * 4)); finishDecade(c, t0, prev, born, c0);
+      var a0 = age(h), end = a0 + 10, n = 0, last = a0, hadLove = false;
+      (function step(){
+        h = hero(); var evp = h.alive ? nextCard(h, last, end, n, hadLove) : null;
+        if (!evp){ if (h.alive) s = T.state.advance(s, Math.max(0, (end - last) * 4)); return finishDecade(c, t0, prev, born, c0); }
+        s = T.state.advance(s, Math.max(0, (evp.at - last) * 4)); last = evp.at; h = hero();
+        if (!h.alive) return finishDecade(c, t0, prev, born, c0);
+        drawAll(); n++; if (evp.e.love) hadLove = true;
+        function show(){ swipeCard(evp.e, function(follow){
+          var say = evp.e.say || (follow ? '……うん、そうする。' : 'ごめん、自分で決めたい。');
+          drawAll(); talk(say); setTimeout(step, evp.e.love && evp.e.love < 4 && s.mini.love.stage > 0 ? 1600 : 0);
         }); }
-      } else s = T.state.advance(s, 40);
-      finishDecade(c, t0, prev, born, c0);
+        if (evp.e.cont){ var el = $('swipe'); el.innerHTML = '<div class="cont">💗 つづく<small>' + evp.at + '歳</small></div>'; el.classList.add('on'); BGM.sfx('whisper'); setTimeout(show, 1100); }
+        else show();
+      })();
     }, 650);
   }
 
