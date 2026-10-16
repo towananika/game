@@ -1,0 +1,13 @@
+{
+  "name": "名前のない声 — TRIATHLON",
+  "short_name": "名前のない声",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
+  "background_color": "#141a1e",
+  "theme_color": "#141a1e",
+  "lang": "ja",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

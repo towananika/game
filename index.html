@@ -2,123 +2,302 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>名前のない声 — TRIATHLON ミニ版</title>
-<meta name="description" content="あなたは名前のない声。ひとりの一生に、10年ごとにひとことだけささやく。">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#141a1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="名前のない声">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon.svg">
+<title>名前のない声 — TRIATHLON</title>
+<meta name="description" content="ひとりの一生に、10年ごとにひとことだけささやくスマホゲーム。">
 <style>
-  :root{ --bg:#141a1e; --surface:#1c2429; --line:#2c373d; --text:#e8e4da; --muted:#93a0a6;
-         --wood:#c99f74; --sage:#9dbd97; --water:#7fa7bd; }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  body{background:var(--bg);color:var(--text);min-height:100vh;
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Mincho ProN","Yu Mincho",serif;
-    display:flex;flex-direction:column;align-items:center;
-    padding:18px 16px 28px;gap:16px;line-height:1.95;font-size:16.5px;
-    background-image:radial-gradient(120% 70% at 50% 0%,#1b262c 0%,#141a1e 70%);}
-  main{width:100%;max-width:560px;flex:1;display:flex;flex-direction:column;gap:14px}
-  header{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:baseline}
-  h1{font-size:13px;letter-spacing:.34em;color:var(--muted);font-weight:400}
-  header em{font-style:normal;font-size:11px;color:var(--muted);letter-spacing:.1em}
-  .lake{width:100%;max-width:560px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
-  .lake i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--wood),var(--sage));transition:width .8s}
-  h2{font-size:18px;font-weight:400;color:var(--wood);letter-spacing:.06em}
-  .ep p{opacity:0;transform:translateY(6px);animation:rise .9s ease forwards}
-  @keyframes rise{to{opacity:1;transform:none}}
-  .star{color:var(--text)} .star:before{content:"★ ";color:var(--wood)}
-  .quiet{color:var(--muted);font-size:14.5px}
-  .voice{color:var(--water);padding-left:14px;border-left:2px solid var(--line);font-style:italic}
-  .q{font-size:13px;letter-spacing:.12em;color:var(--muted);margin-top:8px}
-  .choices{display:flex;flex-direction:column;gap:10px}
-  button.c{font:inherit;font-size:16px;text-align:left;cursor:pointer;color:var(--text);
-    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 17px;transition:border-color .25s}
-  button.c:hover{border-color:var(--wood)}
-  button.c small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;white-space:pre-wrap}
-  .past{border-top:1px solid var(--line);padding-top:12px;opacity:.55;font-size:14px}
-  footer{font-size:11.5px;color:var(--muted);letter-spacing:.08em}
-  a{color:var(--sage)}
-  button.link{font:inherit;font-size:12px;background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+  :root{--bg:#141a1e;--panel:#1c2429cc;--line:#2c373d;--text:#f1ece2;--muted:#93a0a6;
+        --wood:#e0b07c;--sage:#9dbd97;--water:#7fb3d0;--yume:#b48cf0;--toko:#cfd6da}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{height:100%;overflow:hidden;background:var(--bg)}
+  body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    display:flex;justify-content:center}
+  #app{width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;
+    padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 12px);gap:10px}
+
+  /* 上のバー */
+  .top{display:flex;align-items:center;gap:8px}
+  .name{font-weight:700;font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{font-size:13px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+  .icon-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px}
+
+  /* 3つの世界の道 */
+  .track{position:relative;height:26px;display:flex;border-radius:13px;overflow:hidden;border:1px solid var(--line)}
+  .track div{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:.15em;color:#0008}
+  .t1{flex:80;background:linear-gradient(90deg,#9dbd97,#e0b07c)}
+  .t2{flex:12;background:var(--yume);opacity:.35} .t2.on{opacity:1}
+  .t3{flex:8;background:var(--toko);opacity:.35} .t3.on{opacity:1}
+  .runner{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;
+    background:#fff;box-shadow:0 0 0 3px #0005,0 0 12px #fff8;transition:left 1.6s cubic-bezier(.3,.8,.3,1);display:flex;align-items:center;justify-content:center;font-size:11px}
+
+  /* 舞台 */
+  .stage{position:relative;flex:1;min-height:200px;border-radius:22px;overflow:hidden;border:1px solid var(--line);transition:background 1.2s}
+  .stage .ground{position:absolute;left:0;right:0;bottom:0;height:22%;background:#0003}
+  .stage svg.hero{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);transition:all 1.2s cubic-bezier(.3,.8,.3,1);filter:drop-shadow(0 6px 8px #0006)}
+  .stage .stars{position:absolute;inset:0;opacity:0;transition:opacity 1.2s;
+    background-image:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 20%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 40% 60%,#fff,transparent),radial-gradient(2px 2px at 85% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 10% 70%,#fff,transparent)}
+  .stage.yume .stars{opacity:1}
+  .stage .fog{position:absolute;inset:0;background:linear-gradient(0deg,#e8eef0 10%,#e8eef000 80%);opacity:0;transition:opacity 2s}
+  .stage.toko .fog{opacity:.9}
+  .badges{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .badge{font-size:12px;font-weight:700;background:#0007;border-radius:999px;padding:3px 9px;backdrop-filter:blur(4px)}
+  .pop{position:absolute;font-size:34px;animation:float 2.4s ease-out forwards;pointer-events:none}
+  @keyframes float{0%{opacity:0;transform:translateY(20px) scale(.6)}20%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-70px)}}
+  .bubble{position:absolute;left:50%;top:22%;transform:translateX(-50%);background:#fffe;color:#223;font-weight:700;font-size:14px;
+    padding:7px 13px;border-radius:14px;white-space:nowrap;opacity:0;transition:opacity .4s}
+  .bubble.show{opacity:1}
+
+  /* 能力バー */
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px 4px 6px;text-align:center}
+  .stat b{display:block;font-size:17px;line-height:1.2}
+  .stat i{display:block;height:5px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}
+  .stat i u{display:block;height:100%;background:var(--sage);transition:width 1.4s}
+  .stat.up i u{background:var(--wood)}
+
+  /* 出来事カード */
+  .moments{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;min-height:86px}
+  .moments::-webkit-scrollbar{display:none}
+  .m{flex:0 0 31%;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;text-align:center;
+    opacity:0;transform:translateY(10px) scale(.95);animation:in .5s ease forwards}
+  @keyframes in{to{opacity:1;transform:none}}
+  .m b{display:block;font-size:28px;line-height:1.2}
+  .m span{display:block;font-size:11px;color:var(--muted);line-height:1.35;margin-top:3px}
+  .m em{display:block;font-style:normal;font-size:10px;color:var(--wood);font-weight:700}
+
+  /* 選択ボタン */
+  .ask{text-align:center;font-size:13px;color:var(--muted);font-weight:700}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .choices button{font:inherit;color:var(--text);background:var(--panel);border:2px solid var(--line);border-radius:18px;
+    padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .08s,border-color .2s}
+  .choices button:active{transform:scale(.95)}
+  .choices button b{font-size:30px;line-height:1.1}
+  .choices button span{font-size:13px;font-weight:700}
+  .choices button:disabled{opacity:.4}
+  .big{font:inherit;font-size:17px;font-weight:700;color:#1a1a1a;background:var(--wood);border:none;border-radius:18px;padding:15px;cursor:pointer}
+
+  /* 一生のカード */
+  .end{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px;z-index:5}
+  .end.show{display:flex}
+  .lifecard{width:100%;max-width:360px;background:linear-gradient(160deg,#26323a,#1a2025);border:2px solid var(--wood);border-radius:24px;
+    padding:20px;text-align:center;animation:in .6s ease forwards;opacity:0}
+  .lifecard h2{font-size:19px;margin:6px 0 2px}
+  .lifecard .sub{font-size:12px;color:var(--muted)}
+  .row{display:flex;justify-content:center;gap:8px;margin:14px 0;flex-wrap:wrap}
+  .chip{font-size:13px;font-weight:700;background:#0004;border:1px solid var(--line);border-radius:12px;padding:6px 10px}
+  .lifebar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:6px 0 14px}
+  .best{font-size:13px;line-height:1.6;background:#0003;border-radius:12px;padding:10px;margin-bottom:14px}
+  .title{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    background:radial-gradient(120% 80% at 50% 20%,#2a3a44,#141a1e);text-align:center;padding:24px}
+  .title.hide{display:none}
+  .title .logo{font-size:72px;animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-8px)}}
+  .title h1{font-size:28px;letter-spacing:.2em}
+  .title p{color:var(--muted);line-height:1.8}
+  .title .big{width:220px}
+  .title small{font-size:12px;color:var(--muted);max-width:280px;line-height:1.6}
+  .fs{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:4}
+  .foot{text-align:center;font-size:11px;color:var(--muted)} .foot a{color:var(--muted)}
 </style>
 </head>
 <body>
-<header><h1>名 前 の な い 声</h1><em id="step"></em></header>
-<div class="lake"><i id="fill"></i></div>
-<main id="view"></main>
-<footer>TRIATHLON ミニ版 ・ <a href="./concept/">もとの企画</a> ・ <button class="link" id="reset">はじめから</button></footer>
+<div id="app">
+  <div class="top">
+    <div class="name" id="name"></div>
+    <div class="pill" id="age"></div>
+    <div class="pill" id="money"></div>
+    <button class="icon-btn" id="reset" aria-label="はじめから">↻</button>
+  </div>
+  <div class="track"><div class="t1">うつつ</div><div class="t2" id="t2">🌀</div><div class="t3" id="t3">☁️</div><span class="runner" id="runner"></span></div>
+  <div class="stage" id="stage">
+    <div class="stars"></div><div class="ground"></div>
+    <svg class="hero" id="hero" viewBox="0 0 100 140"></svg>
+    <div class="fog"></div>
+    <div class="badges" id="badges"></div>
+    <div class="bubble" id="bubble"></div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="moments" id="moments"></div>
+  <div class="ask" id="ask">次の10年、なんとささやく？</div>
+  <div class="choices" id="choices"></div>
+  <div class="foot">TRIATHLON ・ <a href="./concept/">もとの企画</a></div>
+</div>
+<div class="end" id="end"></div>
+<div class="title" id="title">
+  <div class="logo">🗣️</div>
+  <h1>名前のない声</h1>
+  <p>10年にひとこと。<br>ひとりの一生を見届ける。</p>
+  <button class="big" id="go">▶ はじめる</button>
+  <small id="hint"></small>
+</div>
 <script src="./mini/engine.js"></script>
 <script>
 (function(){
-  var T = window.TRI, KEY = 'tri-mini-v1', s = null;
-  var POLICY = { adventure:['冒険を後押しする','ゆめ・遊び'], family:['家族を大事にさせる','働く・休む'],
-                 study:['学びをすすめる','勉強'], watch:['黙って見守る','本人にまかせる'] };
-  var view = document.getElementById('view');
+  var T = window.TRI, KEY = 'tri-mini-v2', s = null, busy = false;
+  var $ = function(id){ return document.getElementById(id); };
+  var CHOICE = [
+    ['adventure','⚔️','冒険','ぼうけんしよう'], ['family','🏠','家族','家族をだいじに'],
+    ['study','📚','学び','まなぼう'], ['watch','👁️','見守る','……']];
+  var STAT = [['body','💪'],['know','🧠'],['craft','🔧'],['people','🤝'],['heart','❤️']];
+  var ICON = {kiri:'🏝️',voice:'🗣️',dreamDone:'🌟',voiceEcho:'🔔',friend:'🤝',parentDeath:'🕯️',marriage:'💍',birth:'👶',birthMore:'👶',
+    succession:'🔑',path:'🎓',crisis:'⚠️',heir:'🔑',firstYume:'🌀',job:'💼',retire:'🪑',card:'🃏',ability:'⬆️',dream:'✨'};
+  var SKY = ['linear-gradient(180deg,#f6c6d0,#fbe7c6)','linear-gradient(180deg,#7fc4ec,#d7f0ff)',
+             'linear-gradient(180deg,#e89a5c,#f7d29a)','linear-gradient(180deg,#8ea4bb,#dfe6ee)'];
+
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
   function load(){ try{ var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
-  function esc(t){ return String(t).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
   function hero(){ return s.chars[s.heroId]; }
-  function others(h){ return Object.keys(s.chars).map(function(k){return s.chars[k];}).filter(function(c){return c.id!==h.id;}); }
+  function short(t){ t = String(t).split('。')[0]; return t.length > 22 ? t.slice(0,21) + '…' : t; }
+  function rgb(h){ var b = h.battle, r = b.atk+b.def+b.hp, g = b.ran+b.ats+b.spd, bl = b.mag+b.res+b.mp, m = Math.max(r,g,bl);
+    return [r,g,bl].map(function(v){ return Math.round(70 + 170*v/m); }); }
+
+  // 年齢で姿が変わる、かんたんな人の絵
+  function avatar(h){
+    var age = h.alive ? h.age : h.diedAt, c = rgb(h), hair = age >= 65 ? '#d8d8d8' : 'rgb(' + c.join(',') + ')';
+    var mood = h.life.mood || 0, mouth = mood > 0.2 ? 'M42 70 Q50 78 58 70' : mood < -0.2 ? 'M42 74 Q50 68 58 74' : 'M43 72 L57 72';
+    var scale = age < 6 ? .55 : age < 13 ? .7 : age < 19 ? .85 : 1, bend = age >= 70 ? 6 : 0;
+    var hx = h.life.avatar ? '<circle cx="80" cy="22" r="7" fill="#b48cf0"/><text x="80" y="26" font-size="9" text-anchor="middle">✦</text>' : '';
+    return {scale:scale, svg:
+      '<g transform="rotate(' + bend + ' 50 130)">' +
+      '<rect x="30" y="86" width="40" height="46" rx="16" fill="rgb(' + c.map(function(v){return Math.round(v*.7);}).join(',') + ')"/>' +
+      '<circle cx="50" cy="58" r="28" fill="#f3d2b3"/>' +
+      '<path d="M22 56 Q22 26 50 26 Q78 26 78 56 Q70 40 50 40 Q30 40 22 56Z" fill="' + hair + '"/>' +
+      '<circle cx="40" cy="60" r="3.2" fill="#2a2a2a"/><circle cx="60" cy="60" r="3.2" fill="#2a2a2a"/>' +
+      '<path d="' + mouth + '" stroke="#7a4a3a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="34" cy="68" r="4" fill="#f4a0a0" opacity=".5"/><circle cx="66" cy="68" r="4" fill="#f4a0a0" opacity=".5"/>' +
+      '</g>' + hx};
+  }
+
+  function drawHero(){
+    var h = hero(), a = avatar(h), el = $('hero');
+    el.innerHTML = a.svg; el.style.width = (120*a.scale) + 'px'; el.style.height = (168*a.scale) + 'px';
+    el.style.opacity = h.alive ? 1 : .35;
+  }
+
+  function drawTop(prevAbi){
+    var h = hero(), age = h.alive ? h.age : h.diedAt;
+    $('name').textContent = h.name;
+    $('age').textContent = age + '歳';
+    $('money').textContent = '🪙 ' + Math.max(0, Math.round(s.vault.money));
+    $('runner').style.left = (h.alive ? Math.min(78, Math.max(3, age * 0.8)) : 96) + '%';
+    $('runner').textContent = h.alive ? '' : '🕊';
+    $('t2').classList.toggle('on', !!h.life.avatar);
+    $('t3').classList.toggle('on', !h.alive);
+    var st = $('stage');
+    st.style.background = SKY[s.tick % 4];
+    st.classList.toggle('yume', !!h.life.avatar && (h.life.counts.yume || 0) > 10);
+    st.classList.toggle('toko', !h.alive);
+    var b = [];
+    (h.dreams || []).forEach(function(d){ b.push('✨ ' + d.text); });
+    if (h.life.job) b.push('💼 ' + h.life.job.ja);
+    $('badges').innerHTML = b.map(function(t){ return '<span class="badge">' + t + '</span>'; }).join('');
+    $('stats').innerHTML = STAT.map(function(x){
+      var v = h.ability[x[0]], up = prevAbi && v > prevAbi[x[0]] + 0.02;
+      return '<div class="stat' + (up ? ' up' : '') + '"><b>' + x[1] + '</b><i><u style="width:' + Math.round(v*100) + '%"></u></i></div>';
+    }).join('');
+    drawHero();
+  }
+
+  function drawChoices(){
+    var h = hero();
+    if (!h.alive){ $('ask').textContent = ''; $('choices').innerHTML = ''; return; }
+    $('ask').textContent = '次の10年、なんとささやく？';
+    $('choices').innerHTML = CHOICE.map(function(c){
+      return '<button data-k="' + c[0] + '"><b>' + c[1] + '</b><span>' + c[2] + '</span></button>'; }).join('');
+    $('choices').querySelectorAll('button').forEach(function(b){ b.onclick = function(){ whisper(b.dataset.k); }; });
+  }
+
+  function drawMoments(list){
+    $('moments').innerHTML = (list || []).map(function(x, i){
+      return '<div class="m" style="animation-delay:' + (0.3 + i*0.45) + 's"><em>' + x.age + '歳</em><b>' + (ICON[x.kind] || '・') +
+        '</b><span>' + short(x.text) + '</span></div>'; }).join('');
+  }
+
+  function popIcons(list){
+    var st = $('stage');
+    list.forEach(function(x, i){
+      setTimeout(function(){
+        var p = document.createElement('div'); p.className = 'pop'; p.textContent = ICON[x.kind] || '✨';
+        p.style.left = (15 + Math.random()*65) + '%'; p.style.top = (30 + Math.random()*30) + '%';
+        st.appendChild(p); setTimeout(function(){ p.remove(); }, 2500);
+      }, 300 + i*450);
+    });
+  }
+
+  function say(t){ var b = $('bubble'); b.textContent = t; b.classList.add('show'); setTimeout(function(){ b.classList.remove('show'); }, 1400); }
 
   function start(seed){
     s = T.state.createWorld(seed);
     s.vault.policy = { allowance:'normal', voice:'watch', decade:true };
-    var h = hero();
-    s.mini = { episode:0, log:[], pages:[[
-      ['h', h.name + '、誕生'],
-      ['p', T.cities.byId(h.birthCity).name + 'で生まれた。夢はまだ知らない。'],
-      ['p', '家族：' + others(h).map(function(c){ return c.name.split(' ')[1]; }).join('・') + '。'],
-      ['v', 'あなたはこの子にしか聞こえない、名前のない声。10年にひとことだけ、ささやける。']
-    ]] };
-    save(); render();
+    s.mini = { episode:0, last:[] };
+    $('end').classList.remove('show');
+    save(); drawTop(); drawMoments([{age:0, kind:'birth', text:T.cities.byId(hero().birthCity).name + 'で生まれた'}]); drawChoices();
+    popIcons([{kind:'birth'}]);
   }
 
-  function answer(key){
-    s.vault.policy.voice = key;
-    var h = hero(), from = h.age, t0 = s.tick, d0 = h.life.diary.length;
-    s = T.state.advance(s, 40); h = hero(); s.mini.episode += 1;
-    var scenes = (h.life.scenes || []).filter(function(x){ return x.tick >= t0; })
-      .sort(function(a,b){ return b.score-a.score; }).slice(0,4).sort(function(a,b){ return a.tick-b.tick; });
-    var pool = h.life.diary.slice(d0).filter(function(l){ return !scenes.some(function(x){ return x.line===l; }); });
-    var r = T.core.rng(T.core.derive(s.seed, 'mini:' + s.mini.episode));
-    var page = [['h', '第' + s.mini.episode + '話　' + from + '歳〜' + (h.alive ? h.age : h.diedAt) + '歳'],
-                ['v', '「' + POLICY[key][0] + '」とささやいた。']];
-    scenes.forEach(function(x){ page.push(['s', x.line]); });
-    for (var i=0; i<2 && pool.length; i++) page.push(['q', pool.splice(Math.floor(r.next()*pool.length),1)[0]]);
-    if (!h.alive){ page.push(['h', '一生のカード']); page.push(['c', T.text.card(h).join('\n')]); s.mini.done = true; }
-    s.mini.pages.push(page); save(); render(); window.scrollTo({top:0, behavior:'smooth'});
+  function whisper(key){
+    if (busy) return; busy = true;
+    $('choices').querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+    var c = CHOICE.filter(function(x){ return x[0] === key; })[0];
+    say('「' + c[3] + '」');
+    setTimeout(function(){
+      s.vault.policy.voice = key;
+      var h = hero(), t0 = s.tick, prev = JSON.parse(JSON.stringify(h.ability)), born = h.life.bornTick || 0;
+      s = T.state.advance(s, 40); h = hero(); s.mini.episode += 1;
+      var list = (h.life.scenes || []).filter(function(x){ return x.tick >= t0; })
+        .sort(function(a,b){ return b.score - a.score; }).slice(0,3).sort(function(a,b){ return a.tick - b.tick; })
+        .map(function(x){ return {kind:x.kind, text:x.text, age:Math.floor((x.tick - born)/4)}; });
+      s.mini.last = list; save();
+      drawTop(prev); drawMoments(list); popIcons(list);
+      setTimeout(function(){ busy = false; drawChoices(); if (!h.alive) showEnd(); }, 600 + list.length*450);
+    }, 700);
   }
 
-  function drawPage(page, cls){
-    var html = '<section class="' + cls + '">';
-    page.forEach(function(x, i){
-      var d = cls==='ep' ? ' style="animation-delay:' + (i*0.35) + 's"' : '';
-      if (x[0]==='h') html += '<h2>' + esc(x[1]) + '</h2>';
-      else if (x[0]==='c') html += '<p class="card"' + d + '>' + esc(x[1]) + '</p>';
-      else html += '<p class="' + ({s:'star',q:'quiet',v:'voice',p:''}[x[0]]) + '"' + d + '>' + esc(x[1]) + '</p>';
-    });
-    return html + '</section>';
+  function showEnd(){
+    var h = hero(), c = h.life.counts || {}, tot = 0, k;
+    for (k in c) tot += c[k];
+    var seg = [['work','#e0b07c'],['study','#7fb3d0'],['yume','#b48cf0'],['play','#9dbd97'],['rest','#93a0a6']]
+      .map(function(x){ return '<div style="flex:' + (c[x[0]]||0) + ';background:' + x[1] + '"></div>'; }).join('');
+    var done = (h.dreams || []).length && (h.life.scenes || []).some(function(x){ return x.kind === 'dreamDone'; });
+    var best = (h.life.scenes || []).slice().sort(function(a,b){ return b.score - a.score; })[0];
+    var a = avatar(h);
+    $('end').innerHTML = '<div class="lifecard">' +
+      '<svg viewBox="0 0 100 140" width="84" height="118">' + a.svg + '</svg>' +
+      '<h2>' + h.name + '</h2><div class="sub">' + T.cities.byId(h.birthCity).name + ' ・ ' + h.diedAt + '歳</div>' +
+      '<div class="row"><span class="chip">' + (done ? '🌟 夢かなう' : '🌙 夢の途中') + '</span>' +
+      '<span class="chip">' + (h.life.avatar ? '🌀 ゆめへ行った' : '🏡 うつつで生きた') + '</span>' +
+      (h.life.job ? '<span class="chip">💼 ' + h.life.job.ja + '</span>' : '') + '</div>' +
+      '<div class="lifebar">' + seg + '</div>' +
+      (best ? '<div class="best">' + (ICON[best.kind] || '✨') + ' ' + short(best.text) + '</div>' : '') +
+      '<button class="big" id="again">👶 次の命へ</button></div>';
+    $('end').classList.add('show');
+    $('again').onclick = function(){ start(Date.now() % 100000); };
   }
 
-  function render(){
-    var h = hero(), pages = s.mini.pages, html = drawPage(pages[pages.length-1], 'ep');
-    document.getElementById('step').textContent = h.alive ? (h.age + '歳') : '一生を見届けた';
-    document.getElementById('fill').style.width = Math.min(100, (h.alive ? h.age : 100)) + '%';
-    if (!s.mini.done){
-      html += '<p class="q">次の10年、なんとささやく？</p><div class="choices">';
-      Object.keys(POLICY).forEach(function(k){
-        html += '<button class="c" data-k="' + k + '">' + POLICY[k][0] + '<small>' + POLICY[k][1] + '</small></button>';
-      });
-      html += '</div>';
-    } else {
-      html += '<div class="choices"><button class="c" id="again">べつの一生を見届ける<small>新しい子が生まれる</small></button></div>';
-    }
-    for (var i = pages.length-2; i >= 0; i--) html += '<div class="past">' + drawPage(pages[i], 'old') + '</div>';
-    view.innerHTML = html;
-    view.querySelectorAll('button[data-k]').forEach(function(b){ b.onclick = function(){ answer(b.dataset.k); }; });
-    var a = document.getElementById('again'); if (a) a.onclick = function(){ start(Date.now() % 100000); };
+  // 全画面：タップで全画面に。iPhone は「ホーム画面に追加」で全画面アプリになる
+  var standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+  var canFS = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  function goFull(){
+    var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+    if (f && !document.fullscreenElement) try{ var r = f.call(d, {navigationUI:'hide'}); if (r && r.catch) r.catch(function(){}); }catch(e){}
+    try{ screen.orientation.lock('portrait').catch(function(){}); }catch(e){}
   }
-
-  document.getElementById('reset').onclick = function(){ if (confirm('はじめからにしますか？')) start(Date.now() % 100000); };
+  if (!standalone && !canFS) $('hint').textContent = '全画面で遊ぶには：共有ボタン →「ホーム画面に追加」';
+  $('go').onclick = function(){ goFull(); $('title').classList.add('hide'); };
+  if (standalone) $('title').classList.add('hide');
+  $('reset').onclick = function(){ if (confirm('はじめからにしますか？')) start(Date.now() % 100000); };
   s = load();
-  if (s && s.mini) render(); else start(Date.now() % 100000);
+  if (s && s.mini){ drawTop(); drawMoments(s.mini.last); drawChoices(); if (!hero().alive) showEnd(); }
+  else start(Date.now() % 100000);
 })();
 </script>
 </body>
