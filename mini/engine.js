@@ -894,5 +894,5 @@ function ledger(s) {
 module.exports = { yearLine, sceneScore, highlights, markedDiary, card, chronicle, tree, ledger, heroes, WEIGHT };
 
 };
-window.TRI={state:req("state"),text:req("text"),core:req("core"),cities:req("cities")};
+window.TRI={state:req("state"),text:req("text"),core:req("core"),cities:req("cities"),character:req("character")};
 })();
