@@ -474,7 +474,7 @@ function milestones(c, tick, r, policy) {
   // 声のこだま：従った声を、のちに思い出す
   if (a === 30 && L.voice && r.next() < 0.6) scene(c, tick, 'voiceEcho', `ふと、${L.voice.age}歳の春に声が「${L.voice.said}」と言ったのを思い出した。${L.voice.followed ? 'あれに従ったから、いまの自分がいる。' : 'あのとき従っていたら、と少しだけ思う。'}`, r.next());
   // 夢がかなったか（45歳でふり返る）
-  if (a === 45 && !L.dreamDone) {
+  if (a >= 30 && !L.dreamDone) { // ミニ版：30歳から毎年、夢に近い行動が40季節たまっていればかなう
     for (const d of c.dreams) {
       const act = DREAM_ACT[d.text];
       if (d.text !== '霧の島を見つける' && (L.counts[act] || 0) >= 40 && r.next() < 0.7) {

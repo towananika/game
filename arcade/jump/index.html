@@ -21,7 +21,7 @@ html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--
 #coins{font-size:14px;font-weight:600;opacity:.9;display:block}
 .ov{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   padding:calc(env(safe-area-inset-top) + 20px) 24px calc(env(safe-area-inset-bottom) + 20px);text-align:center;
-  background:radial-gradient(ellipse at 50% 40%,rgba(20,26,30,.55),rgba(20,26,30,.92))}
+  background:radial-gradient(ellipse at 50% 40%,rgba(20,26,30,.78),rgba(20,26,30,.94))}
 .hide{display:none!important}
 .logo{font-size:96px;line-height:1;filter:drop-shadow(0 6px 18px rgba(224,176,124,.35));animation:bob 2.4s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-8px)}}
@@ -112,7 +112,7 @@ $('back').addEventListener('pointerdown',e=>e.stopPropagation());
 
 // ---------- state ----------
 let state='title';
-let P,islands,gulls,waves,items,parts,camX,speed,time,dist,bonus,coins,lastX,nextGull,fog,fogT,nextFog,shake,deadT;
+let fogOn=false,P,islands,gulls,waves,items,parts,camX,speed,time,dist,bonus,coins,lastX,nextGull,fog,fogT,nextFog,shake,deadT;
 const G=2700,JV=-860,DJV=-760,PR=22;
 let holding=false,holdT=0,jumpBuf=0;
 
@@ -120,7 +120,7 @@ function reset(){
   P={x:0,y:0,vy:0,ground:true,jumps:0,coyote:0,rot:0,squash:0,blink:2,alive:true,splash:false};
   islands=[];gulls=[];waves=[];items=[];parts=[];
   camX=-VW*0.3;speed=300;time=0;dist=0;bonus=0;coins=0;nextGull=9;
-  fog=0;fogT=0;nextFog=14+Math.random()*6;shake=0;deadT=0;
+  fog=0;fogOn=false;fogT=0;nextFog=12+Math.random()*6;shake=0;deadT=0;
   // first long island
   islands.push({x:-260,w:520,y:520,seed:Math.random()});
   P.y=520-PR;
@@ -226,9 +226,9 @@ function dust(x,y,n){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()*2-1)*
 function update(dt){
   // fog reveal cycle (also on title)
   fogT+=dt;
-  if(fog===0&&fogT>nextFog){fog=0.0001;fogT=0}
-  if(fog>0){const t=fogT;fog=t<1.6?t/1.6:t<5?1:t<6.6?1-(t-5)/1.6:0;
-    if(fog<=0){fog=0;fogT=0;nextFog=16+Math.random()*10}}
+  if(!fogOn&&fogT>nextFog){fogOn=true;fogT=0}
+  if(fogOn){const t=fogT;fog=t<1.6?t/1.6:t<5?1:t<6.6?1-(t-5)/1.6:0;
+    if(t>=6.6){fog=0;fogOn=false;fogT=0;nextFog=16+Math.random()*10}}
   if(state==='title')return;
   if(state!=='play'){updParts(dt);return}
 
@@ -299,8 +299,8 @@ function update(dt){
     if(it.got){it.t+=dt;continue}
     if(P.alive&&Math.hypot(it.x-P.x,it.y-P.y)<PR+16){
       it.got=true;it.t=0;
-      if(it.k==='c'){coins++;bonus+=5;blip(980,0.07,'square',0.04,500)}
-      else{bonus+=25;blip(880,0.08,'triangle',0.06,400);setTimeout(()=>blip(1320,0.12,'triangle',0.06,400),70);
+      if(it.k==='c'){coins++;bonus+=2;blip(980,0.07,'square',0.04,500)}
+      else{bonus+=10;blip(880,0.08,'triangle',0.06,400);setTimeout(()=>blip(1320,0.12,'triangle',0.06,400),70);
         for(let i=0;i<12;i++)parts.push({x:it.x,y:it.y,vx:(Math.random()*2-1)*180,vy:(Math.random()*2-1)*180,l:0.6,ml:0.6,c:'#e0b07c',r:2.5});}
     }
   }
@@ -357,11 +357,13 @@ function drawBg(){
     for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(ix-60+i*32,iy-40-((i*37)%22),1.8+Math.sin(perf*3+i)*0.6,0,Math.PI*2);ctx.fill()}
     ctx.strokeStyle='#d9705a';ctx.lineWidth=3;
     ctx.beginPath();ctx.moveTo(ix+2,iy-118);ctx.lineTo(ix+28,iy-118);ctx.moveTo(ix+6,iy-118);ctx.lineTo(ix+6,iy-104);ctx.moveTo(ix+24,iy-118);ctx.lineTo(ix+24,iy-104);ctx.stroke();
+    const hg=ctx.createRadialGradient(ix,iy-40,0,ix,iy-40,240);hg.addColorStop(0,'rgba(255,200,150,.35)');hg.addColorStop(1,'rgba(255,200,150,0)');
+    ctx.globalAlpha=reveal;ctx.fillStyle=hg;ctx.fillRect(ix-240,iy-280,480,300);
     // god rays
     ctx.globalAlpha=reveal*0.22;
-    const rg=ctx.createLinearGradient(0,0,0,iy);rg.addColorStop(0,'rgba(255,230,190,0)');rg.addColorStop(1,'rgba(255,230,190,1)');
+    const rg=ctx.createLinearGradient(0,-offY,0,iy);rg.addColorStop(0,'rgba(255,230,190,0)');rg.addColorStop(1,'rgba(255,230,190,1)');
     ctx.fillStyle=rg;
-    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(ix-40+i*30,0);ctx.lineTo(ix-10+i*30,0);ctx.lineTo(ix+10+i*14,iy-100);ctx.lineTo(ix-10+i*14,iy-100);ctx.fill()}
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(ix-40+i*30,-offY);ctx.lineTo(ix-10+i*30,-offY);ctx.lineTo(ix+10+i*14,iy-100);ctx.lineTo(ix-10+i*14,iy-100);ctx.fill()}
   }
   ctx.restore();
 
@@ -431,7 +433,7 @@ function drawWave(w){
 }
 function drawGull(g){
   const x=g.x-camX,y=g.yy,f=Math.sin(g.ph);
-  ctx.save();ctx.translate(x,y);
+  ctx.save();ctx.translate(x,y);ctx.scale(1.35,1.35);
   ctx.strokeStyle='#f1ece2';ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(-22,-4-f*12);ctx.quadraticCurveTo(-10,-8-f*4,0,2);ctx.quadraticCurveTo(10,-8-f*4,22,-4-f*12);ctx.stroke();
   ctx.fillStyle='#f1ece2';ctx.beginPath();ctx.ellipse(0,3,9,5,0,0,Math.PI*2);ctx.fill();
