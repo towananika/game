@@ -115,6 +115,9 @@
   .card .rib{display:inline-block;margin:12px 0 4px;font-size:15px;font-weight:900;color:#1a1208;background:linear-gradient(90deg,#ffe29a,#ffb84a);padding:6px 16px;border-radius:999px;box-shadow:0 4px 14px #ffb84a66}
   .row{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:10px 0}
   .chip{font-size:12px;font-weight:800;background:#0005;border:1px solid var(--line);border-radius:10px;padding:5px 9px}
+  .feel{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 12px}
+  .feel small{font-size:12px;color:var(--muted);font-weight:800}
+  .feel button{font-size:26px;background:#ffffff14;border:1px solid var(--line);border-radius:14px;width:48px;height:48px}
   .lifebar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 14px}
   .btns{display:flex;gap:8px}
   .btn{flex:1;font:inherit;font-size:16px;font-weight:900;border:none;border-radius:16px;padding:14px 8px;color:#1a1208;background:linear-gradient(180deg,#ffe29a,#ffb84a);box-shadow:0 4px 0 #b87a20}
@@ -189,6 +192,16 @@
   var T = window.TRI, KEY = 'tri-mini-v3', DEX = 'tri-ribbons', s = null, busy = false;
   var $ = function(id){ return document.getElementById(id); };
   function buzz(n){ try{ navigator.vibrate && navigator.vibrate(n); }catch(e){} }
+  // 計測：KPI（WEB_BACKLOG.md）。いまは端末内に記録だけ。数える先（GoatCounter など）が決まったら COUNT_URL に入れる
+  var COUNT_URL = '';
+  function track(ev){
+    try{
+      var k = 'tri-kpi', d = JSON.parse(localStorage.getItem(k) || '{}'), day = new Date().toISOString().slice(0,10);
+      if (!d.first) d.first = day;
+      d.days = d.days || {}; d.days[day] = 1; d[ev] = (d[ev] || 0) + 1; localStorage.setItem(k, JSON.stringify(d));
+      if (COUNT_URL) (new Image()).src = COUNT_URL + '?p=/ev/' + ev + '&t=' + ev + '&rnd=' + Math.random();
+    }catch(e){}
+  }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
   function load(){ try{ var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
   function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -331,7 +344,7 @@
   function start(seed){
     s = T.state.createWorld(seed);
     s.vault.policy = { allowance:'normal', voice:'watch', decade:true };
-    s.mini = { episode:0, last:[] };
+    s.mini = { episode:0, last:[] }; track('life');
     save(); drawAll(); drawChoices();
     drawMoments([{age:0, kind:'birth', text:T.cities.byId(hero().birthCity).name + 'で生まれた'}]);
     birthCard();
@@ -350,7 +363,7 @@
   }
 
   function whisper(c){
-    if (busy) return; busy = true; buzz([15,30,15]); BGM.sfx('whisper');
+    if (busy) return; busy = true; buzz([15,30,15]); BGM.sfx('whisper'); track('whisper');
     $('choices').querySelectorAll('.ch').forEach(function(b){ b.disabled = true; });
     think(c.i);
     setTimeout(function(){
@@ -376,7 +389,7 @@
   }
 
   function endCard(){
-    var h = hero(), c = h.life.counts || {}, got = ribbons(h), d = dexLoad(), isNew = [];
+    var h = hero(), c = h.life.counts || {}, got = ribbons(h), d = dexLoad(), isNew = []; track('finish');
     got.forEach(function(k){ if (!d[k]) isNew.push(k); d[k] = (d[k] || 0) + 1; }); dexSave(d);
     var main = RIBBON.filter(function(r){ return got.indexOf(r[0]) >= 0; })[0];
     var seg = [['work','#e0b07c'],['study','#7fc4ff'],['yume','#c39bff'],['play','#8fe0a8'],['rest','#a3adb5']]
@@ -389,10 +402,13 @@
       '<div class="rib">' + main[1] + ' ' + main[2] + (isNew.indexOf(main[0]) >= 0 ? '　NEW' : '') + '</div>' +
       '<div class="row">' + others.map(function(r){ return '<span class="chip">' + r[1] + ' ' + r[2] + '</span>'; }).join('') + '</div>' +
       '<div class="lifebar">' + seg + '</div>' +
+      '<div class="feel" id="feel"><small>この一生、どうだった？</small><button data-f="good">😊</button><button data-f="ok">😐</button><button data-f="bad">😞</button></div>' +
       '<div class="btns"><button class="btn sec" id="share">📤 共有</button><button class="btn" id="again">👶 次の命</button></div></div>';
     $('sheet').classList.add('on'); buzz([40,60,40,60,120]); BGM.sfx('fanfare');
     $('again').onclick = function(){ $('sheet').classList.remove('on'); start(Date.now() % 100000); };
-    $('share').onclick = function(){ share(h, main); };
+    $('share').onclick = function(){ track('share'); share(h, main); };
+    $('feel').querySelectorAll('button').forEach(function(b){ b.onclick = function(){ track('feel_' + b.dataset.f); BGM.sfx('tap'); buzz(10);
+      $('feel').innerHTML = '<small>ありがとう</small>' + b.textContent; }; });
   }
 
   // 共有（ねこあつめ／BitLife）。対応していなければコピー
@@ -443,7 +459,10 @@
   $('snd').textContent = BGM.isOn() ? '🔊' : '🔇';
   $('snd').onclick = function(){ BGM.start(); $('snd').textContent = BGM.toggle() ? '🔊' : '🔇'; };
   document.addEventListener('pointerdown', function(){ BGM.start(); }, {once:true});
-  $('go').onclick = function(){ goFull(); buzz(15); BGM.start(); BGM.sfx('tap'); $('title').classList.add('hide'); if (!s) start(Date.now() % 100000); };
+  track('open');
+  // プレイ時間：画面が見えている間、1分ごとに1つ数える
+  setInterval(function(){ if (!document.hidden && $('title').classList.contains('hide')) track('min'); }, 60000);
+  $('go').onclick = function(){ track('start'); goFull(); buzz(15); BGM.start(); BGM.sfx('tap'); $('title').classList.add('hide'); if (!s) start(Date.now() % 100000); };
   $('dexBtn').onclick = dexSheet;
   $('menuBtn').onclick = menuSheet;
   document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
