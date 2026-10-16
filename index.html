@@ -69,6 +69,24 @@
   .bond{font-size:12px;letter-spacing:1px;margin-left:6px;color:#ff8fb1;text-shadow:0 0 6px #ff4f8b88}
   .card .last{font-size:14px;font-weight:700;line-height:1.7;background:#ffffff14;border-radius:14px;padding:10px 12px;margin:10px 0;color:#fff}
   .card .last small{display:block;font-size:10px;color:var(--muted);letter-spacing:.15em}
+  .dream{display:flex;align-items:center;gap:6px;margin-top:5px;max-width:240px}
+  .dream i{flex:1;height:7px;border-radius:4px;background:#0008;overflow:hidden;font-style:normal}
+  .dream i u{display:block;height:100%;background:linear-gradient(90deg,#ffcf6e,#ff8fb1);transition:width 1.2s}
+  .dream b{font-size:11px;font-weight:900;text-shadow:0 1px 4px #000}
+  .dream em{font-style:normal;font-size:13px}
+  .swipe{position:fixed;inset:0;z-index:25;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;background:#000b;backdrop-filter:blur(6px)}
+  .swipe.on{display:flex}
+  .swipe .ask2{font-size:12px;font-weight:900;color:#ffcf6e;letter-spacing:.15em}
+  .sc{position:relative;width:100%;max-width:320px;aspect-ratio:3/4;border-radius:26px;background:linear-gradient(160deg,#f7f1e6,#e6dccb);color:#1b1f26;
+    box-shadow:0 20px 50px #000a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:22px;text-align:center;touch-action:none;transition:transform .25s}
+  .sc .big{font-size:84px;line-height:1}
+  .sc p{font-size:17px;font-weight:900;line-height:1.55}
+  .sc .lab{position:absolute;top:16px;font-size:15px;font-weight:900;padding:6px 12px;border-radius:12px;opacity:0;transition:opacity .1s}
+  .sc .lab.l{left:14px;background:#7fc4ff;transform:rotate(-8deg)} .sc .lab.r{right:14px;background:#ffcf6e;transform:rotate(8deg)}
+  .two{display:flex;gap:10px;width:100%;max-width:320px}
+  .two button{flex:1;font:inherit;font-size:14px;font-weight:900;border:none;border-radius:16px;padding:13px 6px;color:#1a1208}
+  .two button small{display:block;font-size:13px;margin-top:3px;letter-spacing:2px}
+  .two .l{background:#7fc4ff} .two .r{background:#ffcf6e}
   .fly{position:absolute;z-index:4;font-weight:900;font-size:22px;pointer-events:none;text-shadow:0 2px 8px #000;animation:fly 1.6s ease-out forwards}
   @keyframes fly{0%{opacity:0;transform:translateY(16px) scale(.5)}15%{opacity:1;transform:scale(1.25)}30%{transform:scale(1)}100%{opacity:0;transform:translateY(-80px)}}
 
@@ -165,7 +183,7 @@
     <div class="think" id="think"></div>
     <div class="talk" id="talk"></div>
     <div class="plate">
-      <div class="nm"><div class="stars"><span id="stars"></span><span class="bond" id="bond"></span></div><h2 id="name"></h2><div class="tags" id="tags"></div></div>
+      <div class="nm"><div class="stars"><span id="stars"></span><span class="bond" id="bond"></span></div><h2 id="name"></h2><div class="tags" id="tags"></div><div class="dream" id="dream"></div></div>
       <div class="emb" id="emb"></div>
     </div>
   </div>
@@ -177,6 +195,7 @@
   </div>
 </div>
 <div class="sheet" id="sheet"></div>
+<div class="swipe" id="swipe"></div>
 <div class="title" id="title">
   <div class="duo" id="duo"></div>
   <h1>名前のない声</h1>
@@ -274,10 +293,12 @@
     $('por').classList.toggle('dead', !h.alive);
     $('stars').textContent = '★★★★★'.slice(0, stars(h)) + '☆☆☆☆☆'.slice(0, 5 - stars(h));
     $('name').textContent = h.name;
+    drawDream(h);
     var bn = Math.round(h.voice.trust * 5); $('bond').textContent = '♥'.repeat(bn) + '♡'.repeat(5 - bn);
     var tags = [T.cities.byId(h.birthCity).name];
     (h.dreams || []).slice(0,1).forEach(function(d){ tags.push('✨ ' + d.text); });
     if (h.life.job) tags.push(h.life.job.ja);
+    if (h.life.tag) tags.push(h.life.tag);
     $('tags').innerHTML = tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join('');
     $('emb').textContent = h.life.avatar ? CLASS[h.life.job ? h.life.job.color : dom(h)] : '🌱';
     $('stats').innerHTML = STAT.map(function(x){
@@ -318,6 +339,84 @@
     var sp = el.querySelector('span'), iv = setInterval(function(){ sp.textContent = text.slice(0, ++i); if (i % 2) BGM.sfx('tap'); if (i >= text.length) clearInterval(iv); }, 45);
     clearTimeout(talk.t); talk.t = setTimeout(function(){ el.classList.remove('on'); }, 1800 + text.length * 70);
     el.onclick = function(){ el.classList.remove('on'); };
+  }
+
+
+  // 夢ゲージ：夢に近い行動が40季節たまると、30歳以降にかなう。どのささやきが効くかアイコンで見せる
+  var DREAM_ACT = { '先生になる':'study','本を一冊書く':'study','誰かの命を救う':'study','ゆめで名の知れた狩人になる':'yume',
+    '霧の島を見つける':'yume','自分の店を持つ':'work','家族を楽にさせる':'work','遠くの国で暮らす':'work','海を渡る':'play','大きな舞台に立つ':'play' };
+  var ACT_CH = { study:'📚', work:'🏠', rest:'🏠', yume:'⚔️', play:'⚔️' };
+  function dreamInfo(h){
+    var d = (h.dreams || [])[0]; if (!d) return null;
+    var act = DREAM_ACT[d.text], n = (h.life.counts[act] || 0), done = h.life.dreamDone;
+    return { text:d.text, act:act, p: done ? 1 : Math.min(1, n / 40), done: !!done, icon: ACT_CH[act] || '✨' };
+  }
+  function drawDream(h){
+    var di = dreamInfo(h), el = $('dream');
+    if (!di || age(h) < 6){ el.innerHTML = ''; return; }
+    el.innerHTML = '<em>' + (di.done ? '🌟' : di.icon) + '</em><i><u style="width:' + Math.round(di.p * 100) + '%"></u></i><b>' + (di.done ? 'かなった' : Math.round(di.p * 100) + '%') + '</b>';
+  }
+
+  // 山場のカード（Reigns）：10年に1回、左右にスワイプして声をかける。信頼が低いと、子は逆を選ぶこともある
+  var EVENTS = [
+    {a:[14,18], i:'🌀', t:'ゆめで知らない人に、パーティに誘われた', L:['やめておこう',{study:4, know:.04}], R:['行ってみよう',{yume:6, people:.05, avatar:1}]},
+    {a:[17,21], i:'💌', t:'ずっと気になっていた人が、目の前にいる', L:['そっと見守ろう',{heart:.04}], R:['気持ちを伝えよう',{people:.06, mood:.3, heart:.03}]},
+    {a:[21,27], i:'🚆', t:'鉄道会社から「うちで運転士に」と声がかかった', L:['今の道を行こう',{study:3}], R:['乗ってみよう',{work:6, craft:.05, money:300, tag:'運転士'}]},
+    {a:[20,29], i:'🎖️', t:'国を守る仕事の募集が来た', L:['見送ろう',{rest:3}], R:['志願しよう',{work:5, body:.08, heart:.03, tag:'兵士'}]},
+    {a:[24,34], i:'💍', t:'長くいっしょにいる人がいる。結婚の話が出た', L:['まだ早いよ',{work:3}], R:['いっしょに生きよう',{people:.06, mood:.4, rest:3}]},
+    {a:[28,40], i:'🛡️', t:'ゆめの仲間が、赤の都市への遠征に誘ってきた', L:['家にいよう',{rest:3, people:.03}], R:['剣をとろう',{yume:8, body:.06, avatar:1}]},
+    {a:[30,45], i:'✈️', t:'空を飛ぶ仕事の試験がある', L:['地に足をつけよう',{work:3}], R:['空へ行こう',{study:5, craft:.06, tag:'パイロット'}]},
+    {a:[38,55], i:'🏥', t:'親が倒れたと知らせが来た', L:['仕事を続けよう',{work:4, money:200}], R:['そばにいよう',{rest:4, heart:.06, money:-200}]},
+    {a:[42,58], i:'📖', t:'若い人に教えてほしいと頼まれた', L:['自分のことで手一杯',{work:3}], R:['教えよう',{study:5, people:.05}]},
+    {a:[55,72], i:'🔮', t:'青の都市に、光る植物の森があるらしい', L:['もう歳だから',{rest:4}], R:['見に行こう',{yume:6, heart:.05, avatar:1}]},
+    {a:[62,85], i:'🏝️', t:'海の向こうに、霧に包まれた島が見えた気がした', L:['気のせいだ',{rest:3}], R:['舟を出そう',{yume:5, play:3, kiri:.25}]}
+  ];
+  function pickEvent(h, from, to){
+    var used = s.mini.used || (s.mini.used = []);
+    var c = EVENTS.filter(function(e, i){ return used.indexOf(i) < 0 && e.a[1] >= from && e.a[0] <= to; });
+    if (!c.length) return null;
+    var e = c[(s.mini.episode * 7 + from) % c.length]; used.push(EVENTS.indexOf(e));
+    return { e:e, at: Math.max(from + 1, Math.min(to - 1, Math.max(e.a[0], from + 1))) };
+  }
+  function applyFx(h, fx, label, ev){
+    var L = h.life; ['body','know','craft','people','heart'].forEach(function(k){ if (fx[k]) h.ability[k] = Math.min(1, Math.max(0, h.ability[k] + fx[k])); });
+    ['study','work','yume','play','rest'].forEach(function(k){ if (fx[k] && (k !== 'yume' || L.avatar || fx.avatar)) L.counts[k] = (L.counts[k] || 0) + fx[k]; });
+    if (fx.avatar && !L.avatar && age(h) >= 13){ L.avatar = true; }
+    if (fx.mood) L.mood = Math.min(1, Math.max(0, L.mood + fx.mood));
+    if (fx.money) s.vault.money = Math.max(0, s.vault.money + fx.money);
+    if (fx.tag) L.tag = fx.tag;
+    var tick = s.tick, line = age(h) + '歳　' + ev.t + '。' + label + '。';
+    if (fx.kiri && Math.random() < fx.kiri){ L.kiri = true; L.scenes.push({tick:tick, kind:'kiri', text:'霧が晴れ、地図にない島が見えた。', line:line, score:1}); }
+    else L.scenes.push({tick:tick, kind:'voice', text:ev.t + '。' + label, line:line, score:.6});
+  }
+  function fxIcons(fx){
+    var m = {body:'💪',know:'🧠',craft:'🔧',people:'🤝',heart:'❤️',yume:'🌀',money:'🪙',kiri:'🏝️',mood:'😊'}, out = '';
+    for (var k in m) if (fx[k]) out += m[k] + (fx[k] < 0 ? '−' : '');
+    return out;
+  }
+  function swipeCard(ev, done){
+    var h = hero(), el = $('swipe');
+    el.innerHTML = '<div class="ask2">🗣️ 声をかける</div><div class="sc" id="sc"><span class="lab l">' + esc(ev.L[0]) + '</span><span class="lab r">' + esc(ev.R[0]) + '</span>' +
+      '<div class="big">' + ev.i + '</div><p>' + esc(ev.t) + '</p><small style="font-weight:900;color:#8a7a60">' + age(h) + '歳・' + esc(h.name.split(' ')[1]) + '</small></div>' +
+      '<div class="two"><button class="l" id="bl">← ' + esc(ev.L[0]) + '<small>' + fxIcons(ev.L[1]) + '</small></button><button class="r" id="br">' + esc(ev.R[0]) + ' →<small>' + fxIcons(ev.R[1]) + '</small></button></div>';
+    el.classList.add('on'); BGM.sfx('hold'); buzz(15);
+    var sc = $('sc'), x0 = null, dx = 0, fin = false;
+    function pick(side){
+      if (fin) return; fin = true;
+      sc.style.transform = 'translateX(' + (side === 'R' ? 140 : -140) + '%) rotate(' + (side === 'R' ? 25 : -25) + 'deg)';
+      var follow = Math.random() < h.voice.trust + 0.3 * (1 - h.voice.independence);
+      var real = follow ? side : (side === 'R' ? 'L' : 'R'), opt = ev[real];
+      h.voice.trust = Math.round(Math.min(1, Math.max(0, h.voice.trust + (follow ? .04 : -.02))) * 1000) / 1000;
+      applyFx(h, opt[1], (follow ? '声のとおり、' : '自分で決めて、') + opt[0], ev);
+      BGM.sfx(follow ? 'up' : 'down'); buzz(follow ? [10,30,10] : 40); track(follow ? 'card_follow' : 'card_refuse');
+      setTimeout(function(){ el.classList.remove('on'); done(follow, opt[0]); }, 380);
+    }
+    sc.addEventListener('pointerdown', function(e){ x0 = e.clientX; sc.setPointerCapture(e.pointerId); sc.style.transition = 'none'; });
+    sc.addEventListener('pointermove', function(e){ if (x0 === null) return; dx = e.clientX - x0;
+      sc.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 14) + 'deg)';
+      sc.querySelector('.l').style.opacity = dx < -20 ? Math.min(1, -dx / 90) : 0; sc.querySelector('.r').style.opacity = dx > 20 ? Math.min(1, dx / 90) : 0; });
+    sc.addEventListener('pointerup', function(){ sc.style.transition = ''; if (Math.abs(dx) > 90) pick(dx > 0 ? 'R' : 'L'); else { sc.style.transform = ''; sc.querySelectorAll('.lab').forEach(function(l){ l.style.opacity = 0; }); } x0 = null; dx = 0; });
+    $('bl').onclick = function(){ pick('L'); }; $('br').onclick = function(){ pick('R'); };
   }
 
   function fly(text, color, x, y){
@@ -372,7 +471,21 @@
     setTimeout(function(){
       s.vault.policy.voice = c.k;
       var h = hero(), t0 = s.tick, prev = JSON.parse(JSON.stringify(h.ability)), born = h.life.bornTick || 0, c0 = JSON.parse(JSON.stringify(h.life.counts));
-      s = T.state.advance(s, 40); h = hero(); s.mini.episode += 1;
+      var a0 = age(h), evp = h.alive ? pickEvent(h, a0, a0 + 10) : null;
+      if (evp){
+        s = T.state.advance(s, (evp.at - a0) * 4); h = hero();
+        if (h.alive){ busy = true; return swipeCard(evp.e, function(follow, label){
+          talk(follow ? '……うん、そうする。' : 'ごめん、自分で決めたい。');
+          s = T.state.advance(s, Math.max(0, (a0 + 10 - evp.at) * 4)); finishDecade(c, t0, prev, born, c0);
+        }); }
+      } else s = T.state.advance(s, 40);
+      finishDecade(c, t0, prev, born, c0);
+    }, 650);
+  }
+
+  function finishDecade(c, t0, prev, born, c0){
+    {
+      var h = hero(); s.mini.episode += 1;
       var list = (h.life.scenes || []).filter(function(x){ return x.tick >= t0; })
         .sort(function(a,b){ return b.score - a.score; }).slice(0,3).sort(function(a,b){ return a.tick - b.tick; })
         .map(function(x){ return {kind:x.kind, text:x.text, age:Math.floor((x.tick - born)/4)}; });
@@ -388,7 +501,7 @@
       var line = talkLine(h, c, push.indexOf(best) >= 0);
       if (h.alive) setTimeout(function(){ talk(line); }, 1700);
       setTimeout(function(){ busy = false; drawChoices(); if (!h.alive) setTimeout(endCard, 900); }, 1500);
-    }, 650);
+    }
   }
 
   function endCard(){
