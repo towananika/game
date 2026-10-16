@@ -1,0 +1,33 @@
+# 毎日18時（韓国・日本時間）に、開発用ブランチ next の内容を main に反映して公開する。
+# 開発はいつでも next に積み、公開は1日1回にまとめる（ユーザー 2026-10-16「アップデートは毎日18時」）。
+name: 毎日18時の公開
+on:
+  schedule:
+    - cron: '0 9 * * *'   # UTC 9:00 = 18:00 KST/JST
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: next を main にまとめる
+        run: |
+          git config user.name "release-bot"
+          git config user.email "release-bot@users.noreply.github.com"
+          if ! git ls-remote --exit-code --heads origin next >/dev/null; then echo "next がないので何もしない"; exit 0; fi
+          git fetch origin next
+          if [ -z "$(git log --oneline main..origin/next)" ]; then echo "新しい変更なし"; exit 0; fi
+          git merge --no-edit origin/next -m "毎日18時の公開"
+          git push origin main
+          echo "PUBLISHED=1" >> "$GITHUB_ENV"
+      - name: ページを作り直す
+        if: env.PUBLISHED == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "ページの再構築の依頼に失敗（通常の自動構築を待つ）"
