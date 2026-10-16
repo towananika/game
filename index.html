@@ -118,6 +118,7 @@
   .feel{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 12px}
   .feel small{font-size:12px;color:var(--muted);font-weight:800}
   .feel button{font-size:26px;background:#ffffff14;border:1px solid var(--line);border-radius:14px;width:48px;height:48px}
+  .feel .fb{font-size:13px;font-weight:900;color:#1a1208;background:#ffcf6e;border-radius:10px;padding:6px 10px;text-decoration:none}
   .lifebar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 14px}
   .btns{display:flex;gap:8px}
   .btn{flex:1;font:inherit;font-size:16px;font-weight:900;border:none;border-radius:16px;padding:14px 8px;color:#1a1208;background:linear-gradient(180deg,#ffe29a,#ffb84a);box-shadow:0 4px 0 #b87a20}
@@ -193,7 +194,9 @@
   var $ = function(id){ return document.getElementById(id); };
   function buzz(n){ try{ navigator.vibrate && navigator.vibrate(n); }catch(e){} }
   // 計測：KPI（WEB_BACKLOG.md）。いまは端末内に記録だけ。数える先（GoatCounter など）が決まったら COUNT_URL に入れる
-  var COUNT_URL = '';
+  // GoatCounter のコード（例 'towananika'）と Google フォームのURL。ユーザーから届いたら入れる
+  var GC_CODE = '', FORM_URL = '';
+  var COUNT_URL = GC_CODE ? 'https://' + GC_CODE + '.goatcounter.com/count' : '';
   function track(ev){
     try{
       var k = 'tri-kpi', d = JSON.parse(localStorage.getItem(k) || '{}'), day = new Date().toISOString().slice(0,10);
@@ -408,7 +411,7 @@
     $('again').onclick = function(){ $('sheet').classList.remove('on'); start(Date.now() % 100000); };
     $('share').onclick = function(){ track('share'); share(h, main); };
     $('feel').querySelectorAll('button').forEach(function(b){ b.onclick = function(){ track('feel_' + b.dataset.f); BGM.sfx('tap'); buzz(10);
-      $('feel').innerHTML = '<small>ありがとう</small>' + b.textContent; }; });
+      $('feel').innerHTML = '<small>ありがとう</small>' + b.textContent + (FORM_URL ? ' <a class="fb" target="_blank" rel="noopener" href="' + FORM_URL + '">✍️ ひとこと感想</a>' : ''); }; });
   }
 
   // 共有（ねこあつめ／BitLife）。対応していなければコピー
