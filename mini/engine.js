@@ -140,8 +140,10 @@ function create(seed, id, opts = {}) {
   const temper = {}; for (const k of TEMPER) temper[k] = round(clamp01(r.normal(0.5, 0.2)));
   const avoid = opts.avoid || [];
   const free = city.names.given.filter(g => !avoid.includes(g));
+  const fam = opts.familyName || r.pick(city.names.family), given = r.pick(free.length ? free : city.names.given);
   return {
-    id, name: `${opts.familyName || r.pick(city.names.family)} ${r.pick(free.length ? free : city.names.given)}`,
+    id, name: `${fam} ${given}`,
+    sex: city.names.given.indexOf(given) % 2 ? 'f' : 'm', // 名前の候補は男・女の交互に並んでいる（絵柄用）
     generation: opts.generation || 1, owner: opts.owner || 'local',
     birthSeason: ['Spring', 'Summer', 'Fall', 'Winter'][r.int(0, 3)],
     birthCity: city.id, currentCity: city.id,
@@ -502,7 +504,7 @@ function decide(c, st, r, policy) {
     if (a === 'rest') mods.push(['無理をしない性分', 0.12 * t.caution], ['疲れがたまっていた', 0.7 * L.fatigue]);
     for (const [act, text] of dreamActs) if (act === a) mods.push([`「${text}」という夢のため`, 0.15]);
     // ミニ版：10年ごとの声の方針が、信頼のぶんだけ背中を押す（5章の「声の後押し」）
-    if (policy && PUSH[policy] && PUSH[policy].includes(a)) mods.push(['声に背中を押された', 0.35 * (c.voice.trust + 0.2)]);
+    if (policy && PUSH[policy] && PUSH[policy].includes(a)) mods.push(['声に背中を押された', 0.6 * (c.voice.trust + 0.3)]);
     const score = mods.reduce((s, m) => s + m[1], 0) * (0.5 + r.next());
     if (score > best.score) {
       // 理由は効いた項から重みつきで1つ選ぶ（毎回同じ理由にならないように）
@@ -526,9 +528,17 @@ function season(c, tick, seed, vault) {
     return c;
   }
   milestones(c, tick, r, vault && vault.policy ? vault.policy.voice || 'adventure' : 'adventure');
+  const pol = vault && vault.policy && vault.policy.decade ? vault.policy.voice : null;
+  // ミニ版：「冒険」とささやき続けると、ゆめに行かなかった子もいつかログインする
+  if (pol === 'adventure' && !L.avatar && c.age >= 13 && c.age < 70 && r.next() < 0.04 + 0.08 * c.voice.trust) {
+    L.avatar = true;
+    scene(c, tick, 'firstYume', '声に誘われて、はじめてゆめにログインした。', r.next());
+  }
   const st = stage(c.age, L); c.stage = st.id;
   const d = decide(c, st, r, vault && vault.policy && vault.policy.decade ? vault.policy.voice : null);
   L.counts[d.act] = (L.counts[d.act] || 0) + 1;
+  // 声の方針どおりに動けた季節は、声への信頼が少し育つ
+  if (pol && PUSH[pol] && PUSH[pol].includes(d.act)) c.voice.trust = Math.round(Math.min(1, c.voice.trust + 0.004) * 1000) / 1000;
   const y = L.year[d.act] || (L.year[d.act] = { n: 0, why: {} });
   y.n++; y.why[d.why] = (y.why[d.why] || 0) + 1;
   // 状態の変化

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#141a1e">
+<meta name="theme-color" content="#0e1116">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,276 +14,379 @@
 <title>名前のない声 — TRIATHLON</title>
 <meta name="description" content="ひとりの一生に、10年ごとにひとことだけささやくスマホゲーム。">
 <style>
-  :root{--bg:#141a1e;--panel:#1c2429cc;--line:#2c373d;--text:#f1ece2;--muted:#93a0a6;
-        --wood:#e0b07c;--sage:#9dbd97;--water:#7fb3d0;--yume:#b48cf0;--toko:#cfd6da}
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
-  html,body{height:100%;overflow:hidden;background:var(--bg)}
-  body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
-    display:flex;justify-content:center}
-  #app{width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;
-    padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 12px);gap:10px}
+  :root{--bg:#0e1116;--glass:#ffffff12;--glass2:#ffffff1f;--line:#ffffff22;--text:#f4f0e8;--muted:#a3adb5;
+        --gold:#ffcf6e;--wood:#e0b07c;--sage:#8fe0a8;--water:#7fc4ff;--yume:#c39bff;--red:#ff6b7f}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  html,body{height:100%;overflow:hidden;background:var(--bg);overscroll-behavior:none;touch-action:manipulation}
+  body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;display:flex;justify-content:center}
+  #app{position:relative;width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+  /* 背景（世界ごとに変わる） */
+  .bg{position:absolute;inset:0;transition:background 1.4s;z-index:0}
+  .bg.utsutsu{background:radial-gradient(120% 60% at 50% 18%,#3b5b74 0%,#1a2733 55%,#0e1116 100%)}
+  .bg.yume{background:radial-gradient(120% 60% at 50% 18%,#5b3b8a 0%,#24183f 55%,#0e0b18 100%)}
+  .bg.toko{background:radial-gradient(120% 60% at 50% 18%,#b9c4cc 0%,#4a5560 55%,#14181c 100%)}
+  .parts{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .parts i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;opacity:.0;animation:twk 4s infinite}
+  @keyframes twk{50%{opacity:.7}}
 
   /* 上のバー */
-  .top{display:flex;align-items:center;gap:8px}
-  .name{font-weight:700;font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pill{font-size:13px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
-  .icon-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px}
+  .top{position:relative;z-index:2;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 10px) 14px 6px}
+  .pill{font-size:13px;font-weight:800;background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:5px 11px;backdrop-filter:blur(8px)}
+  .sp{flex:1}
+  .ib{width:36px;height:36px;border-radius:50%;background:var(--glass);border:1px solid var(--line);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center}
+  .track{position:relative;z-index:2;margin:0 14px;height:8px;border-radius:4px;display:flex;overflow:hidden;background:#0006}
+  .track b{display:block;height:100%}
+  .track .r{position:absolute;top:-5px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff;transition:left 1.6s cubic-bezier(.3,.8,.3,1)}
+  .track-wrap{position:relative;z-index:2;padding:6px 0 0}
 
-  /* 3つの世界の道 */
-  .track{position:relative;height:26px;display:flex;border-radius:13px;overflow:hidden;border:1px solid var(--line)}
-  .track div{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:.15em;color:#0008}
-  .t1{flex:80;background:linear-gradient(90deg,#9dbd97,#e0b07c)}
-  .t2{flex:12;background:var(--yume);opacity:.35} .t2.on{opacity:1}
-  .t3{flex:8;background:var(--toko);opacity:.35} .t3.on{opacity:1}
-  .runner{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;
-    background:#fff;box-shadow:0 0 0 3px #0005,0 0 12px #fff8;transition:left 1.6s cubic-bezier(.3,.8,.3,1);display:flex;align-items:center;justify-content:center;font-size:11px}
+  /* 立ち絵とネームプレート */
+  .stage{position:relative;z-index:1;flex:1;min-height:0;display:flex;align-items:flex-end;justify-content:center}
+  .aura{position:absolute;left:50%;bottom:14%;width:120%;aspect-ratio:1;transform:translateX(-50%);
+    background:radial-gradient(closest-side,#ffffff30,#ffffff00);pointer-events:none}
+  .por{position:relative;height:100%;max-height:430px;aspect-ratio:200/244;transition:transform .5s cubic-bezier(.3,1.4,.5,1),filter 1s}
+  .por svg{width:100%;height:100%;display:block;filter:drop-shadow(0 10px 18px #000a)}
+  .por.bump{transform:scale(1.04)}
+  .por.dead{filter:grayscale(.8) brightness(1.2) opacity(.55)}
+  .plate{position:absolute;left:14px;right:14px;bottom:10px;z-index:3;display:flex;align-items:flex-end;gap:10px;pointer-events:none}
+  .plate .nm{flex:1;min-width:0}
+  .plate .stars{color:var(--gold);font-size:14px;letter-spacing:1px;text-shadow:0 0 8px #ffb000aa}
+  .plate h2{font-size:26px;font-weight:900;letter-spacing:.04em;line-height:1.15;text-shadow:0 2px 12px #000,0 0 2px #000;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .plate .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+  .tag{font-size:11px;font-weight:800;background:#000a;border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .emb{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    background:linear-gradient(145deg,#ffffff30,#ffffff08);border:1px solid var(--line);box-shadow:0 4px 14px #0008}
+  .think{position:absolute;right:12%;top:8%;z-index:3;font-size:30px;background:#fff;border-radius:50%;width:58px;height:58px;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px #0008;transform:scale(0);transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+  .think:after{content:"";position:absolute;left:4px;bottom:-6px;width:14px;height:14px;border-radius:50%;background:#fff}
+  .think.on{transform:scale(1)}
+  .fly{position:absolute;z-index:4;font-weight:900;font-size:22px;pointer-events:none;text-shadow:0 2px 8px #000;animation:fly 1.6s ease-out forwards}
+  @keyframes fly{0%{opacity:0;transform:translateY(16px) scale(.5)}15%{opacity:1;transform:scale(1.25)}30%{transform:scale(1)}100%{opacity:0;transform:translateY(-80px)}}
 
-  /* 舞台 */
-  .stage{position:relative;flex:1;min-height:200px;border-radius:22px;overflow:hidden;border:1px solid var(--line);transition:background 1.2s}
-  .stage .ground{position:absolute;left:0;right:0;bottom:0;height:22%;background:#0003}
-  .stage svg.hero{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);transition:all 1.2s cubic-bezier(.3,.8,.3,1);filter:drop-shadow(0 6px 8px #0006)}
-  .stage .stars{position:absolute;inset:0;opacity:0;transition:opacity 1.2s;
-    background-image:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 20%,#fff,transparent),
-    radial-gradient(1.5px 1.5px at 40% 60%,#fff,transparent),radial-gradient(2px 2px at 85% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 10% 70%,#fff,transparent)}
-  .stage.yume .stars{opacity:1}
-  .stage .fog{position:absolute;inset:0;background:linear-gradient(0deg,#e8eef0 10%,#e8eef000 80%);opacity:0;transition:opacity 2s}
-  .stage.toko .fog{opacity:.9}
-  .badges{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px}
-  .badge{font-size:12px;font-weight:700;background:#0007;border-radius:999px;padding:3px 9px;backdrop-filter:blur(4px)}
-  .pop{position:absolute;font-size:34px;animation:float 2.4s ease-out forwards;pointer-events:none}
-  @keyframes float{0%{opacity:0;transform:translateY(20px) scale(.6)}20%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-70px)}}
-  .bubble{position:absolute;left:50%;top:22%;transform:translateX(-50%);background:#fffe;color:#223;font-weight:700;font-size:14px;
-    padding:7px 13px;border-radius:14px;white-space:nowrap;opacity:0;transition:opacity .4s}
-  .bubble.show{opacity:1}
-
-  /* 能力バー */
+  /* 下のパネル */
+  .panel{position:relative;z-index:2;padding:10px 14px calc(env(safe-area-inset-bottom) + 12px);
+    background:linear-gradient(180deg,#0e111600,#0e1116ee 18%);display:flex;flex-direction:column;gap:10px}
   .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px 4px 6px;text-align:center}
-  .stat b{display:block;font-size:17px;line-height:1.2}
-  .stat i{display:block;height:5px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}
-  .stat i u{display:block;height:100%;background:var(--sage);transition:width 1.4s}
-  .stat.up i u{background:var(--wood)}
-
-  /* 出来事カード */
-  .moments{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;min-height:86px}
-  .moments::-webkit-scrollbar{display:none}
-  .m{flex:0 0 31%;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;text-align:center;
-    opacity:0;transform:translateY(10px) scale(.95);animation:in .5s ease forwards}
+  .st{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:5px 0 6px;text-align:center;transition:box-shadow .2s,transform .2s,border-color .2s}
+  .st b{display:block;font-size:18px;line-height:1.2}
+  .st small{display:block;font-size:11px;font-weight:800;color:var(--muted)}
+  .st.glow{border-color:var(--gold);box-shadow:0 0 0 2px #ffcf6e55,0 0 16px #ffcf6e88;transform:translateY(-3px)}
+  .st.up small{color:var(--sage)}
+  .moments{display:flex;gap:8px;min-height:62px}
+  .m{flex:1;min-width:0;display:flex;align-items:center;gap:7px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:7px 8px;
+    opacity:0;transform:translateY(10px);animation:in .45s ease forwards}
   @keyframes in{to{opacity:1;transform:none}}
-  .m b{display:block;font-size:28px;line-height:1.2}
-  .m span{display:block;font-size:11px;color:var(--muted);line-height:1.35;margin-top:3px}
-  .m em{display:block;font-style:normal;font-size:10px;color:var(--wood);font-weight:700}
+  .m b{font-size:24px}
+  .m span{font-size:10.5px;line-height:1.35;color:#dfe5ea;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .m em{display:block;font-style:normal;font-size:10px;font-weight:900;color:var(--gold)}
+  .choices{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .ch{position:relative;height:76px;border-radius:20px;border:1px solid var(--line);color:var(--text);font:inherit;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .12s,box-shadow .2s;touch-action:manipulation}
+  .ch b{font-size:30px;line-height:1}
+  .ch span{font-size:12px;font-weight:900}
+  .ch.a{background:linear-gradient(160deg,#8a4fff,#4a2a9a)}
+  .ch.f{background:linear-gradient(160deg,#ff9a5a,#a8482a)}
+  .ch.s{background:linear-gradient(160deg,#45a8ff,#1f5aa8)}
+  .ch.w{background:linear-gradient(160deg,#5a6672,#2c343c)}
+  .ch.press{transform:scale(.92);box-shadow:0 0 0 3px #fff8}
+  .ch:disabled{opacity:.35}
+  .hold{position:absolute;left:10%;right:10%;bottom:7px;height:3px;border-radius:2px;background:#fff;transform:scaleX(0);transform-origin:left}
+  .ch.press .hold{transition:transform .35s linear;transform:scaleX(1)}
+  .hint{text-align:center;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em}
 
-  /* 選択ボタン */
-  .ask{text-align:center;font-size:13px;color:var(--muted);font-weight:700}
-  .choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-  .choices button{font:inherit;color:var(--text);background:var(--panel);border:2px solid var(--line);border-radius:18px;
-    padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .08s,border-color .2s}
-  .choices button:active{transform:scale(.95)}
-  .choices button b{font-size:30px;line-height:1.1}
-  .choices button span{font-size:13px;font-weight:700}
-  .choices button:disabled{opacity:.4}
-  .big{font:inherit;font-size:17px;font-weight:700;color:#1a1a1a;background:var(--wood);border:none;border-radius:18px;padding:15px;cursor:pointer}
+  /* 全画面のシート */
+  .sheet{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:20px;background:#000c;backdrop-filter:blur(6px)}
+  .sheet.on{display:flex}
+  .card{position:relative;width:100%;max-width:360px;border-radius:26px;padding:18px 18px 20px;text-align:center;overflow:hidden;
+    background:linear-gradient(160deg,#2c3542,#141920);border:2px solid var(--gold);box-shadow:0 0 40px #ffcf6e44;animation:pop .55s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes pop{from{transform:scale(.6) rotate(-4deg);opacity:0}}
+  .card .pic{width:150px;margin:0 auto -6px}
+  .card h3{font-size:22px;font-weight:900;margin-top:6px}
+  .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .card .rib{display:inline-block;margin:12px 0 4px;font-size:15px;font-weight:900;color:#1a1208;background:linear-gradient(90deg,#ffe29a,#ffb84a);padding:6px 16px;border-radius:999px;box-shadow:0 4px 14px #ffb84a66}
+  .row{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .chip{font-size:12px;font-weight:800;background:#0005;border:1px solid var(--line);border-radius:10px;padding:5px 9px}
+  .lifebar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 14px}
+  .btns{display:flex;gap:8px}
+  .btn{flex:1;font:inherit;font-size:16px;font-weight:900;border:none;border-radius:16px;padding:14px 8px;color:#1a1208;background:linear-gradient(180deg,#ffe29a,#ffb84a);box-shadow:0 4px 0 #b87a20}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b87a20}
+  .btn.sec{color:var(--text);background:#ffffff22;box-shadow:0 4px 0 #0008}
+  .burst{position:absolute;inset:-40%;background:conic-gradient(from 0deg,#ffcf6e00,#ffcf6e55,#ffcf6e00 20%,#ffcf6e55 30%,#ffcf6e00 40%,#ffcf6e55 50%,#ffcf6e00 60%,#ffcf6e55 70%,#ffcf6e00 80%,#ffcf6e55 90%,#ffcf6e00);
+    animation:spin 8s linear infinite;pointer-events:none;opacity:.6}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .card > *:not(.burst){position:relative}
+  .dex{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+  .dex div{background:#0005;border:1px solid var(--line);border-radius:12px;padding:8px 2px;font-size:24px}
+  .dex div small{display:block;font-size:9.5px;font-weight:800;color:var(--muted);margin-top:2px;line-height:1.2}
+  .dex div.no{opacity:.35;filter:grayscale(1)}
 
-  /* 一生のカード */
-  .end{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px;z-index:5}
-  .end.show{display:flex}
-  .lifecard{width:100%;max-width:360px;background:linear-gradient(160deg,#26323a,#1a2025);border:2px solid var(--wood);border-radius:24px;
-    padding:20px;text-align:center;animation:in .6s ease forwards;opacity:0}
-  .lifecard h2{font-size:19px;margin:6px 0 2px}
-  .lifecard .sub{font-size:12px;color:var(--muted)}
-  .row{display:flex;justify-content:center;gap:8px;margin:14px 0;flex-wrap:wrap}
-  .chip{font-size:13px;font-weight:700;background:#0004;border:1px solid var(--line);border-radius:12px;padding:6px 10px}
-  .lifebar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:6px 0 14px}
-  .best{font-size:13px;line-height:1.6;background:#0003;border-radius:12px;padding:10px;margin-bottom:14px}
-  .title{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-    background:radial-gradient(120% 80% at 50% 20%,#2a3a44,#141a1e);text-align:center;padding:24px}
+  /* タイトル */
+  .title{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;
+    background:radial-gradient(120% 80% at 50% 25%,#3b4d6a,#0e1116 70%)}
   .title.hide{display:none}
-  .title .logo{font-size:72px;animation:bob 2.4s ease-in-out infinite}
-  @keyframes bob{50%{transform:translateY(-8px)}}
-  .title h1{font-size:28px;letter-spacing:.2em}
-  .title p{color:var(--muted);line-height:1.8}
-  .title .big{width:220px}
+  .title .duo{display:flex;gap:0;margin-bottom:-6px}
+  .title .duo div{width:130px}
+  .title h1{font-size:30px;font-weight:900;letter-spacing:.18em;text-shadow:0 0 20px #7fc4ff88}
+  .title p{color:var(--muted);font-size:14px;line-height:1.8}
+  .title .btn{width:240px;flex:none}
+  .title a.btn{text-decoration:none;display:block}
   .title small{font-size:12px;color:var(--muted);max-width:280px;line-height:1.6}
-  .fs{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:4}
-  .foot{text-align:center;font-size:11px;color:var(--muted)} .foot a{color:var(--muted)}
 </style>
 </head>
 <body>
 <div id="app">
+  <div class="bg utsutsu" id="bg"></div>
+  <div class="parts" id="parts"></div>
   <div class="top">
-    <div class="name" id="name"></div>
-    <div class="pill" id="age"></div>
-    <div class="pill" id="money"></div>
-    <button class="icon-btn" id="reset" aria-label="はじめから">↻</button>
+    <span class="pill" id="age"></span>
+    <span class="pill" id="money"></span>
+    <span class="sp"></span>
+    <button class="ib" id="snd" aria-label="音">🔊</button>
+    <button class="ib" id="dexBtn" aria-label="図鑑">🎀</button>
+    <button class="ib" id="menuBtn" aria-label="メニュー">☰</button>
   </div>
-  <div class="track"><div class="t1">うつつ</div><div class="t2" id="t2">🌀</div><div class="t3" id="t3">☁️</div><span class="runner" id="runner"></span></div>
+  <div class="track-wrap"><div class="track" id="track"><b style="flex:80;background:linear-gradient(90deg,#8fe0a8,#e0b07c)"></b><b id="tk2" style="flex:12;background:#c39bff;opacity:.3"></b><b id="tk3" style="flex:8;background:#d9e1e6;opacity:.3"></b><span class="r" id="runner"></span></div></div>
   <div class="stage" id="stage">
-    <div class="stars"></div><div class="ground"></div>
-    <svg class="hero" id="hero" viewBox="0 0 100 140"></svg>
-    <div class="fog"></div>
-    <div class="badges" id="badges"></div>
-    <div class="bubble" id="bubble"></div>
+    <div class="aura"></div>
+    <div class="por" id="por"></div>
+    <div class="think" id="think"></div>
+    <div class="plate">
+      <div class="nm"><div class="stars" id="stars"></div><h2 id="name"></h2><div class="tags" id="tags"></div></div>
+      <div class="emb" id="emb"></div>
+    </div>
   </div>
-  <div class="stats" id="stats"></div>
-  <div class="moments" id="moments"></div>
-  <div class="ask" id="ask">次の10年、なんとささやく？</div>
-  <div class="choices" id="choices"></div>
-  <div class="foot">TRIATHLON ・ <a href="./concept/">もとの企画</a></div>
+  <div class="panel">
+    <div class="stats" id="stats"></div>
+    <div class="moments" id="moments"></div>
+    <div class="choices" id="choices"></div>
+    <div class="hint" id="hint">長押しでささやく ・ ふれると影響が光る</div>
+  </div>
 </div>
-<div class="end" id="end"></div>
+<div class="sheet" id="sheet"></div>
 <div class="title" id="title">
-  <div class="logo">🗣️</div>
+  <div class="duo" id="duo"></div>
   <h1>名前のない声</h1>
   <p>10年にひとこと。<br>ひとりの一生を見届ける。</p>
-  <button class="big" id="go">▶ はじめる</button>
-  <small id="hint"></small>
+  <button class="btn" id="go">▶ はじめる</button>
+  <a class="btn sec" href="./arcade/">🎮 ミニゲーム</a>
+  <small id="fsHint"></small>
 </div>
 <script src="./mini/engine.js"></script>
+<script src="./mini/portrait.js"></script>
+<script src="./mini/bgm.js"></script>
 <script>
 (function(){
-  var T = window.TRI, KEY = 'tri-mini-v2', s = null, busy = false;
+  var T = window.TRI, KEY = 'tri-mini-v3', DEX = 'tri-ribbons', s = null, busy = false;
   var $ = function(id){ return document.getElementById(id); };
-  var CHOICE = [
-    ['adventure','⚔️','冒険','ぼうけんしよう'], ['family','🏠','家族','家族をだいじに'],
-    ['study','📚','学び','まなぼう'], ['watch','👁️','見守る','……']];
-  var STAT = [['body','💪'],['know','🧠'],['craft','🔧'],['people','🤝'],['heart','❤️']];
-  var ICON = {kiri:'🏝️',voice:'🗣️',dreamDone:'🌟',voiceEcho:'🔔',friend:'🤝',parentDeath:'🕯️',marriage:'💍',birth:'👶',birthMore:'👶',
-    succession:'🔑',path:'🎓',crisis:'⚠️',heir:'🔑',firstYume:'🌀',job:'💼',retire:'🪑',card:'🃏',ability:'⬆️',dream:'✨'};
-  var SKY = ['linear-gradient(180deg,#f6c6d0,#fbe7c6)','linear-gradient(180deg,#7fc4ec,#d7f0ff)',
-             'linear-gradient(180deg,#e89a5c,#f7d29a)','linear-gradient(180deg,#8ea4bb,#dfe6ee)'];
-
+  function buzz(n){ try{ navigator.vibrate && navigator.vibrate(n); }catch(e){} }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
   function load(){ try{ var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function hero(){ return s.chars[s.heroId]; }
-  function short(t){ t = String(t).split('。')[0]; return t.length > 22 ? t.slice(0,21) + '…' : t; }
-  function rgb(h){ var b = h.battle, r = b.atk+b.def+b.hp, g = b.ran+b.ats+b.spd, bl = b.mag+b.res+b.mp, m = Math.max(r,g,bl);
-    return [r,g,bl].map(function(v){ return Math.round(70 + 170*v/m); }); }
+  function short(t){ t = String(t).split('。')[0]; return t.length > 26 ? t.slice(0,25) + '…' : t; }
 
-  // 年齢で姿が変わる、かんたんな人の絵
-  function avatar(h){
-    var age = h.alive ? h.age : h.diedAt, c = rgb(h), hair = age >= 65 ? '#d8d8d8' : 'rgb(' + c.join(',') + ')';
-    var mood = h.life.mood || 0, mouth = mood > 0.2 ? 'M42 70 Q50 78 58 70' : mood < -0.2 ? 'M42 74 Q50 68 58 74' : 'M43 72 L57 72';
-    var scale = age < 6 ? .55 : age < 13 ? .7 : age < 19 ? .85 : 1, bend = age >= 70 ? 6 : 0;
-    var hx = h.life.avatar ? '<circle cx="80" cy="22" r="7" fill="#b48cf0"/><text x="80" y="26" font-size="9" text-anchor="middle">✦</text>' : '';
-    return {scale:scale, svg:
-      '<g transform="rotate(' + bend + ' 50 130)">' +
-      '<rect x="30" y="86" width="40" height="46" rx="16" fill="rgb(' + c.map(function(v){return Math.round(v*.7);}).join(',') + ')"/>' +
-      '<circle cx="50" cy="58" r="28" fill="#f3d2b3"/>' +
-      '<path d="M22 56 Q22 26 50 26 Q78 26 78 56 Q70 40 50 40 Q30 40 22 56Z" fill="' + hair + '"/>' +
-      '<circle cx="40" cy="60" r="3.2" fill="#2a2a2a"/><circle cx="60" cy="60" r="3.2" fill="#2a2a2a"/>' +
-      '<path d="' + mouth + '" stroke="#7a4a3a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-      '<circle cx="34" cy="68" r="4" fill="#f4a0a0" opacity=".5"/><circle cx="66" cy="68" r="4" fill="#f4a0a0" opacity=".5"/>' +
-      '</g>' + hx};
+  // ささやき：ふれると影響する能力が光る（Reigns のゲージ予告）
+  var CHOICE = [
+    {k:'adventure', c:'a', i:'⚔️', n:'冒険', say:'ぼうけんしよう', hit:['body','heart'], yume:true},
+    {k:'family',    c:'f', i:'🏠', n:'家族', say:'家族をだいじに', hit:['people','heart']},
+    {k:'study',     c:'s', i:'📚', n:'学び', say:'まなぼう', hit:['know','craft']},
+    {k:'watch',     c:'w', i:'👁️', n:'見守る', say:'……', hit:[]}];
+  var STAT = [['body','💪','体'],['know','🧠','知'],['craft','🔧','技'],['people','🤝','人'],['heart','❤️','心']];
+  var ICON = {kiri:'🏝️',voice:'🗣️',dreamDone:'🌟',voiceEcho:'🔔',friend:'🤝',parentDeath:'🕯️',marriage:'💍',birth:'👶',birthMore:'👶',
+    succession:'🔑',path:'🎓',crisis:'⚠️',heir:'🔑',firstYume:'🌀',job:'💼',retire:'🪑',card:'🃏',ability:'⬆️',dream:'✨'};
+  var CLASS = {R:'🛡️',G:'🏹',B:'🔮'};
+  var THINK = {work:'💼',study:'📖',yume:'🌀',play:'🎮',rest:'😴'};
+  // リボン（称号）：一生の終わりに1つ。図鑑に集まる（BitLife / Reigns）
+  var RIBBON = [
+    ['kiri','🏝️','霧の島を見た'], ['dream','🌟','夢をかなえた'], ['long','🕊️','百寿の旅人'], ['yume','🌀','ゆめの住人'],
+    ['trust','🗣️','声を信じた'], ['free','🦅','自分で決めた'], ['scholar','📚','学びの人'], ['worker','💼','働き者'],
+    ['family','💍','家族の灯'], ['play','🎮','遊びの達人'], ['short','🌱','早すぎた別れ'], ['plain','🍃','おだやかな一生']];
+
+  function stars(h){ var a = h.aptitude, t = a.body + a.mind + a.hands + a.sense + a.voice; return t > 3.2 ? 5 : t > 2.85 ? 4 : t > 2.4 ? 3 : t > 2 ? 2 : 1; }
+  function dom(h){ var b = h.battle, r = b.atk+b.def+b.hp, g = b.ran+b.ats+b.spd, bl = b.mag+b.res+b.mp; return r >= g && r >= bl ? 'R' : g >= bl ? 'G' : 'B'; }
+  function age(h){ return h.alive ? h.age : h.diedAt; }
+
+  function ribbons(h){
+    var c = h.life.counts || {}, tot = 0, k, sc = h.life.scenes || [], got = [];
+    for (k in c) tot += c[k];
+    function share(a){ return tot ? (c[a] || 0) / tot : 0; }
+    function has(kind){ return sc.some(function(x){ return x.kind === kind; }); }
+    if (has('kiri')) got.push('kiri');
+    if (has('dreamDone')) got.push('dream');
+    if (h.diedAt >= 95) got.push('long');
+    if (share('yume') > .22) got.push('yume');
+    if (h.voice.trust >= .6) got.push('trust');
+    if (h.voice.trust <= .15) got.push('free');
+    if (share('study') > .28) got.push('scholar');
+    if (share('work') > .42) got.push('worker');
+    if (has('marriage')) got.push('family');
+    if (share('play') > .35) got.push('play');
+    if (h.diedAt < 50) got.push('short');
+    if (!got.length) got.push('plain');
+    return got;
+  }
+  function dexLoad(){ try{ return JSON.parse(localStorage.getItem(DEX) || '{}'); }catch(e){ return {}; } }
+  function dexSave(d){ try{ localStorage.setItem(DEX, JSON.stringify(d)); }catch(e){} }
+
+  function particles(){
+    var p = $('parts'), h = '';
+    for (var i = 0; i < 26; i++) h += '<i style="left:' + Math.random()*100 + '%;top:' + Math.random()*60 + '%;animation-delay:' + Math.random()*4 + 's"></i>';
+    p.innerHTML = h;
   }
 
-  function drawHero(){
-    var h = hero(), a = avatar(h), el = $('hero');
-    el.innerHTML = a.svg; el.style.width = (120*a.scale) + 'px'; el.style.height = (168*a.scale) + 'px';
-    el.style.opacity = h.alive ? 1 : .35;
-  }
-
-  function drawTop(prevAbi){
-    var h = hero(), age = h.alive ? h.age : h.diedAt;
-    $('name').textContent = h.name;
-    $('age').textContent = age + '歳';
+  function drawAll(prev){
+    var h = hero(), a = age(h);
+    $('age').textContent = a + '歳';
     $('money').textContent = '🪙 ' + Math.max(0, Math.round(s.vault.money));
-    $('runner').style.left = (h.alive ? Math.min(78, Math.max(3, age * 0.8)) : 96) + '%';
-    $('runner').textContent = h.alive ? '' : '🕊';
-    $('t2').classList.toggle('on', !!h.life.avatar);
-    $('t3').classList.toggle('on', !h.alive);
-    var st = $('stage');
-    st.style.background = SKY[s.tick % 4];
-    st.classList.toggle('yume', !!h.life.avatar && (h.life.counts.yume || 0) > 10);
-    st.classList.toggle('toko', !h.alive);
-    var b = [];
-    (h.dreams || []).forEach(function(d){ b.push('✨ ' + d.text); });
-    if (h.life.job) b.push('💼 ' + h.life.job.ja);
-    $('badges').innerHTML = b.map(function(t){ return '<span class="badge">' + t + '</span>'; }).join('');
+    $('runner').style.left = (h.alive ? Math.min(79, Math.max(2, a * 0.8)) : 96) + '%';
+    $('tk2').style.opacity = h.life.avatar ? 1 : .3;
+    $('tk3').style.opacity = h.alive ? .3 : 1;
+    var yume = h.alive && h.life.avatar && (h.life.counts.yume || 0) > 8;
+    var world = !h.alive ? 'toko' : yume ? 'yume' : 'utsutsu';
+    $('bg').className = 'bg ' + world; BGM.mode(world);
+    $('por').innerHTML = Portrait(h, 'm');
+    $('por').classList.toggle('dead', !h.alive);
+    $('stars').textContent = '★★★★★'.slice(0, stars(h)) + '☆☆☆☆☆'.slice(0, 5 - stars(h));
+    $('name').textContent = h.name;
+    var tags = [T.cities.byId(h.birthCity).name];
+    (h.dreams || []).slice(0,1).forEach(function(d){ tags.push('✨ ' + d.text); });
+    if (h.life.job) tags.push(h.life.job.ja);
+    $('tags').innerHTML = tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join('');
+    $('emb').textContent = h.life.avatar ? CLASS[h.life.job ? h.life.job.color : dom(h)] : '🌱';
     $('stats').innerHTML = STAT.map(function(x){
-      var v = h.ability[x[0]], up = prevAbi && v > prevAbi[x[0]] + 0.02;
-      return '<div class="stat' + (up ? ' up' : '') + '"><b>' + x[1] + '</b><i><u style="width:' + Math.round(v*100) + '%"></u></i></div>';
+      var v = Math.round(h.ability[x[0]] * 100), up = prev && v > Math.round(prev[x[0]] * 100);
+      return '<div class="st' + (up ? ' up' : '') + '" data-s="' + x[0] + '"><b>' + x[1] + '</b><small>' + v + '</small></div>';
     }).join('');
-    drawHero();
-  }
-
-  function drawChoices(){
-    var h = hero();
-    if (!h.alive){ $('ask').textContent = ''; $('choices').innerHTML = ''; return; }
-    $('ask').textContent = '次の10年、なんとささやく？';
-    $('choices').innerHTML = CHOICE.map(function(c){
-      return '<button data-k="' + c[0] + '"><b>' + c[1] + '</b><span>' + c[2] + '</span></button>'; }).join('');
-    $('choices').querySelectorAll('button').forEach(function(b){ b.onclick = function(){ whisper(b.dataset.k); }; });
   }
 
   function drawMoments(list){
     $('moments').innerHTML = (list || []).map(function(x, i){
-      return '<div class="m" style="animation-delay:' + (0.3 + i*0.45) + 's"><em>' + x.age + '歳</em><b>' + (ICON[x.kind] || '・') +
-        '</b><span>' + short(x.text) + '</span></div>'; }).join('');
+      return '<div class="m" style="animation-delay:' + (0.2 + i*0.35) + 's"><b>' + (ICON[x.kind] || '✨') + '</b><div><em>' + x.age + '歳</em><span>' + esc(short(x.text)) + '</span></div></div>';
+    }).join('');
   }
 
-  function popIcons(list){
-    var st = $('stage');
-    list.forEach(function(x, i){
-      setTimeout(function(){
-        var p = document.createElement('div'); p.className = 'pop'; p.textContent = ICON[x.kind] || '✨';
-        p.style.left = (15 + Math.random()*65) + '%'; p.style.top = (30 + Math.random()*30) + '%';
-        st.appendChild(p); setTimeout(function(){ p.remove(); }, 2500);
-      }, 300 + i*450);
+  function think(icon){
+    var t = $('think'); t.textContent = icon; t.classList.add('on');
+    setTimeout(function(){ t.classList.remove('on'); }, 2600);
+  }
+
+  function fly(text, color, x, y){
+    var f = document.createElement('div'); f.className = 'fly'; f.textContent = text; f.style.color = color || '#fff';
+    f.style.left = x + '%'; f.style.top = y + '%'; $('stage').appendChild(f);
+    setTimeout(function(){ f.remove(); }, 1700);
+  }
+
+  // 長押しで決定（誤タップ防止）。ふれている間は影響する能力が光る
+  function drawChoices(){
+    var h = hero();
+    if (!h.alive){ $('choices').innerHTML = ''; $('hint').textContent = ''; return; }
+    $('hint').textContent = '長押しでささやく ・ ふれると影響が光る';
+    $('choices').innerHTML = CHOICE.map(function(c){
+      return '<button class="ch ' + c.c + '" data-k="' + c.k + '"><b>' + c.i + '</b><span>' + c.n + '</span><i class="hold"></i></button>'; }).join('');
+    $('choices').querySelectorAll('.ch').forEach(function(b){
+      var c = CHOICE.filter(function(x){ return x.k === b.dataset.k; })[0], timer = null;
+      function glow(on){ document.querySelectorAll('.st').forEach(function(el){ el.classList.toggle('glow', on && c.hit.indexOf(el.dataset.s) >= 0); }); $('tk2').style.boxShadow = on && c.yume ? '0 0 12px #c39bff' : ''; }
+      function down(e){ if (busy) return; e.preventDefault(); b.classList.add('press'); glow(true); buzz(8); BGM.sfx('hold');
+        timer = setTimeout(function(){ b.classList.remove('press'); glow(false); whisper(c); }, 350); }
+      function up(){ clearTimeout(timer); b.classList.remove('press'); glow(false); }
+      b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up); b.addEventListener('pointercancel', up);
+      b.addEventListener('contextmenu', function(e){ e.preventDefault(); });
     });
   }
-
-  function say(t){ var b = $('bubble'); b.textContent = t; b.classList.add('show'); setTimeout(function(){ b.classList.remove('show'); }, 1400); }
 
   function start(seed){
     s = T.state.createWorld(seed);
     s.vault.policy = { allowance:'normal', voice:'watch', decade:true };
     s.mini = { episode:0, last:[] };
-    $('end').classList.remove('show');
-    save(); drawTop(); drawMoments([{age:0, kind:'birth', text:T.cities.byId(hero().birthCity).name + 'で生まれた'}]); drawChoices();
-    popIcons([{kind:'birth'}]);
+    save(); drawAll(); drawChoices();
+    drawMoments([{age:0, kind:'birth', text:T.cities.byId(hero().birthCity).name + 'で生まれた'}]);
+    birthCard();
   }
 
-  function whisper(key){
-    if (busy) return; busy = true;
-    $('choices').querySelectorAll('button').forEach(function(b){ b.disabled = true; });
-    var c = CHOICE.filter(function(x){ return x[0] === key; })[0];
-    say('「' + c[3] + '」');
+  // 誕生はガチャのように：光って、星の数が出る
+  function birthCard(){
+    var h = hero(), n = stars(h);
+    $('sheet').innerHTML = '<div class="card">' + (n >= 4 ? '<div class="burst"></div>' : '') +
+      '<div class="stars" style="color:var(--gold);font-size:22px;letter-spacing:2px">' + '★★★★★'.slice(0,n) + '</div>' +
+      '<div class="pic">' + Portrait(h, 'b') + '</div><h3>' + esc(h.name) + '</h3><div class="sub">' + T.cities.byId(h.birthCity).name + 'に誕生</div>' +
+      '<div class="row">' + (h.dreams || []).map(function(d){ return '<span class="chip">✨ ' + esc(d.text) + '</span>'; }).join('') + '</div>' +
+      '<div class="btns"><button class="btn" id="ok">🗣️ 見届ける</button></div></div>';
+    $('sheet').classList.add('on'); buzz(n >= 4 ? [30,40,60] : 20); BGM.sfx('gacha');
+    $('ok').onclick = function(){ $('sheet').classList.remove('on'); };
+  }
+
+  function whisper(c){
+    if (busy) return; busy = true; buzz([15,30,15]); BGM.sfx('whisper');
+    $('choices').querySelectorAll('.ch').forEach(function(b){ b.disabled = true; });
+    think(c.i);
     setTimeout(function(){
-      s.vault.policy.voice = key;
-      var h = hero(), t0 = s.tick, prev = JSON.parse(JSON.stringify(h.ability)), born = h.life.bornTick || 0;
+      s.vault.policy.voice = c.k;
+      var h = hero(), t0 = s.tick, prev = JSON.parse(JSON.stringify(h.ability)), born = h.life.bornTick || 0, c0 = JSON.parse(JSON.stringify(h.life.counts));
       s = T.state.advance(s, 40); h = hero(); s.mini.episode += 1;
       var list = (h.life.scenes || []).filter(function(x){ return x.tick >= t0; })
         .sort(function(a,b){ return b.score - a.score; }).slice(0,3).sort(function(a,b){ return a.tick - b.tick; })
         .map(function(x){ return {kind:x.kind, text:x.text, age:Math.floor((x.tick - born)/4)}; });
       s.mini.last = list; save();
-      drawTop(prev); drawMoments(list); popIcons(list);
-      setTimeout(function(){ busy = false; drawChoices(); if (!h.alive) showEnd(); }, 600 + list.length*450);
-    }, 700);
+      drawAll(prev); drawMoments(list);
+      $('por').classList.add('bump'); setTimeout(function(){ $('por').classList.remove('bump'); }, 500);
+      // 数字が飛ぶ（ウマ娘の育成のように）
+      STAT.forEach(function(x, i){ var d = Math.round((h.ability[x[0]] - prev[x[0]]) * 100);
+        if (d) setTimeout(function(){ fly(x[1] + (d > 0 ? '+' : '') + d, d > 0 ? '#8fe0a8' : '#ff6b7f', 8 + i*18, 55); BGM.sfx(d > 0 ? 'up' : 'down'); if (d > 0) buzz(6); }, 250 + i*160); });
+      var best = null, bn = 0; for (var k in h.life.counts){ var dd = h.life.counts[k] - (c0[k] || 0); if (dd > bn){ bn = dd; best = k; } }
+      if (best) setTimeout(function(){ think(THINK[best] || '💭'); }, 1200);
+      setTimeout(function(){ busy = false; drawChoices(); if (!h.alive) setTimeout(endCard, 900); }, 1500);
+    }, 650);
   }
 
-  function showEnd(){
-    var h = hero(), c = h.life.counts || {}, tot = 0, k;
-    for (k in c) tot += c[k];
-    var seg = [['work','#e0b07c'],['study','#7fb3d0'],['yume','#b48cf0'],['play','#9dbd97'],['rest','#93a0a6']]
-      .map(function(x){ return '<div style="flex:' + (c[x[0]]||0) + ';background:' + x[1] + '"></div>'; }).join('');
-    var done = (h.dreams || []).length && (h.life.scenes || []).some(function(x){ return x.kind === 'dreamDone'; });
-    var best = (h.life.scenes || []).slice().sort(function(a,b){ return b.score - a.score; })[0];
-    var a = avatar(h);
-    $('end').innerHTML = '<div class="lifecard">' +
-      '<svg viewBox="0 0 100 140" width="84" height="118">' + a.svg + '</svg>' +
-      '<h2>' + h.name + '</h2><div class="sub">' + T.cities.byId(h.birthCity).name + ' ・ ' + h.diedAt + '歳</div>' +
-      '<div class="row"><span class="chip">' + (done ? '🌟 夢かなう' : '🌙 夢の途中') + '</span>' +
-      '<span class="chip">' + (h.life.avatar ? '🌀 ゆめへ行った' : '🏡 うつつで生きた') + '</span>' +
-      (h.life.job ? '<span class="chip">💼 ' + h.life.job.ja + '</span>' : '') + '</div>' +
+  function endCard(){
+    var h = hero(), c = h.life.counts || {}, got = ribbons(h), d = dexLoad(), isNew = [];
+    got.forEach(function(k){ if (!d[k]) isNew.push(k); d[k] = (d[k] || 0) + 1; }); dexSave(d);
+    var main = RIBBON.filter(function(r){ return got.indexOf(r[0]) >= 0; })[0];
+    var seg = [['work','#e0b07c'],['study','#7fc4ff'],['yume','#c39bff'],['play','#8fe0a8'],['rest','#a3adb5']]
+      .map(function(x){ return '<b style="flex:' + (c[x[0]] || 0) + ';background:' + x[1] + '"></b>'; }).join('');
+    var others = RIBBON.filter(function(r){ return got.indexOf(r[0]) >= 0 && r !== main; });
+    $('sheet').innerHTML = '<div class="card"><div class="burst"></div>' +
+      '<div class="pic">' + Portrait(h, 'e') + '</div><h3>' + esc(h.name) + '</h3>' +
+      '<div class="sub">' + T.cities.byId(h.birthCity).name + ' ・ ' + h.diedAt + '歳で とこよへ</div>' +
+      '<div class="rib">' + main[1] + ' ' + main[2] + (isNew.indexOf(main[0]) >= 0 ? '　NEW' : '') + '</div>' +
+      '<div class="row">' + others.map(function(r){ return '<span class="chip">' + r[1] + ' ' + r[2] + '</span>'; }).join('') + '</div>' +
       '<div class="lifebar">' + seg + '</div>' +
-      (best ? '<div class="best">' + (ICON[best.kind] || '✨') + ' ' + short(best.text) + '</div>' : '') +
-      '<button class="big" id="again">👶 次の命へ</button></div>';
-    $('end').classList.add('show');
-    $('again').onclick = function(){ start(Date.now() % 100000); };
+      '<div class="btns"><button class="btn sec" id="share">📤 共有</button><button class="btn" id="again">👶 次の命</button></div></div>';
+    $('sheet').classList.add('on'); buzz([40,60,40,60,120]); BGM.sfx('fanfare');
+    $('again').onclick = function(){ $('sheet').classList.remove('on'); start(Date.now() % 100000); };
+    $('share').onclick = function(){ share(h, main); };
   }
 
-  // 全画面：タップで全画面に。iPhone は「ホーム画面に追加」で全画面アプリになる
+  // 共有（ねこあつめ／BitLife）。対応していなければコピー
+  function share(h, main){
+    var text = '【名前のない声】' + h.name + '（' + T.cities.byId(h.birthCity).name + '）は ' + h.diedAt + '歳で一生を終えた。' + main[1] + '「' + main[2] + '」';
+    var url = location.href.split('#')[0].split('?')[0];
+    if (navigator.share) navigator.share({ title:'名前のない声', text:text, url:url }).catch(function(){});
+    else { try{ navigator.clipboard.writeText(text + ' ' + url); fly('📋 コピーした', '#fff', 30, 30); }catch(e){} }
+  }
+
+  function dexSheet(){
+    var d = dexLoad(), n = 0;
+    var html = RIBBON.map(function(r){ var on = d[r[0]]; if (on) n++;
+      return '<div class="' + (on ? '' : 'no') + '">' + r[1] + '<small>' + (on ? r[2] : '？？？') + '</small></div>'; }).join('');
+    $('sheet').innerHTML = '<div class="card"><h3>🎀 リボン図鑑</h3><div class="sub">' + n + ' / ' + RIBBON.length + '</div><div class="dex">' + html + '</div>' +
+      '<div class="btns"><button class="btn" id="ok">とじる</button></div></div>';
+    $('sheet').classList.add('on');
+    $('ok').onclick = function(){ $('sheet').classList.remove('on'); };
+  }
+
+  function menuSheet(){
+    $('sheet').innerHTML = '<div class="card"><h3>☰ メニュー</h3><div class="btns" style="flex-direction:column;margin-top:14px">' +
+      '<button class="btn sec" id="m1">🎮 ミニゲーム</button><button class="btn sec" id="m2">⛶ 全画面</button>' +
+      '<button class="btn sec" id="m3">↻ べつの一生をはじめる</button><button class="btn" id="ok">とじる</button></div></div>';
+    $('sheet').classList.add('on');
+    $('m1').onclick = function(){ location.href = './arcade/'; };
+    $('m2').onclick = function(){ goFull(); $('sheet').classList.remove('on'); };
+    $('m3').onclick = function(){ $('sheet').classList.remove('on'); start(Date.now() % 100000); };
+    $('ok').onclick = function(){ $('sheet').classList.remove('on'); };
+  }
+
   var standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
   var canFS = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
   function goFull(){
@@ -291,13 +394,26 @@
     if (f && !document.fullscreenElement) try{ var r = f.call(d, {navigationUI:'hide'}); if (r && r.catch) r.catch(function(){}); }catch(e){}
     try{ screen.orientation.lock('portrait').catch(function(){}); }catch(e){}
   }
-  if (!standalone && !canFS) $('hint').textContent = '全画面で遊ぶには：共有ボタン →「ホーム画面に追加」';
-  $('go').onclick = function(){ goFull(); $('title').classList.add('hide'); };
-  if (standalone) $('title').classList.add('hide');
-  $('reset').onclick = function(){ if (confirm('はじめからにしますか？')) start(Date.now() % 100000); };
+
+  // タイトルには男子と女子をひとりずつ
+  (function(){
+    var pair = [], i = 1;
+    while (pair.length < 2 && i < 60){ var w = T.state.createWorld(i * 31), h = w.chars[w.heroId]; h.age = 17;
+      if (!pair.some(function(p){ return p.sex === h.sex; })) pair.push(h); i++; }
+    $('duo').innerHTML = pair.map(function(h, j){ return '<div>' + Portrait(h, 't' + j) + '</div>'; }).join('');
+  })();
+  if (!standalone && !canFS) $('fsHint').textContent = '全画面で遊ぶには：共有ボタン →「ホーム画面に追加」';
+  $('snd').textContent = BGM.isOn() ? '🔊' : '🔇';
+  $('snd').onclick = function(){ BGM.start(); $('snd').textContent = BGM.toggle() ? '🔊' : '🔇'; };
+  document.addEventListener('pointerdown', function(){ BGM.start(); }, {once:true});
+  $('go').onclick = function(){ goFull(); buzz(15); BGM.start(); BGM.sfx('tap'); $('title').classList.add('hide'); if (!s) start(Date.now() % 100000); };
+  $('dexBtn').onclick = dexSheet;
+  $('menuBtn').onclick = menuSheet;
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+  particles();
   s = load();
-  if (s && s.mini){ drawTop(); drawMoments(s.mini.last); drawChoices(); if (!hero().alive) showEnd(); }
-  else start(Date.now() % 100000);
+  if (s && s.mini){ drawAll(); drawMoments(s.mini.last); drawChoices(); }
+  if (standalone){ $('title').classList.add('hide'); if (!s) start(Date.now() % 100000); else if (!hero().alive) endCard(); }
 })();
 </script>
 </body>

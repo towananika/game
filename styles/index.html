@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>絵柄の見本 — 名前のない声</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0e1116;color:#f4f0e8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;padding:20px 16px 40px}
+  main{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  h1{font-size:22px;text-align:center;letter-spacing:.1em}
+  .s{border-radius:22px;overflow:hidden;border:1px solid #ffffff22;background:radial-gradient(120% 90% at 50% 10%,#3b4d6a,#141a22)}
+  .s h2{font-size:18px;padding:12px 16px 0}
+  .s h2 b{display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:9px;background:#ffcf6e;color:#1a1208;margin-right:8px}
+  .s p{font-size:13px;color:#a3adb5;padding:4px 16px 0}
+  .duo{display:grid;grid-template-columns:repeat(4,1fr);align-items:end;padding:6px 6px 0}
+  .duo svg,.duo canvas{width:100%;height:auto;display:block}
+  .pix canvas{image-rendering:pixelated}
+</style>
+</head>
+<body>
+<main>
+  <h1>🎨 絵柄の見本</h1>
+  <section class="s"><h2><b>A</b>アニメ</h2><p>いまの絵柄。大きな瞳でやわらかい。</p><div class="duo" id="A"></div></section>
+  <section class="s"><h2><b>B</b>クール</h2><p>切れ長の目、影と青いふちどり。かっこよさ重視。</p><div class="duo" id="B"></div></section>
+  <section class="s"><h2><b>C</b>ちびキャラ</h2><p>頭が大きい2頭身。かわいさ重視。</p><div class="duo" id="C"></div></section>
+  <section class="s pix"><h2><b>D</b>ドット絵</h2><p>レトロゲーム風。小さくても目立つ。</p><div class="duo" id="D"></div></section>
+</main>
+<script src="../mini/engine.js"></script>
+<script src="../mini/portrait.js"></script>
+<script>
+(function(){
+  var T = window.TRI, people = [], i = 1;
+  // 男子・女子を2人ずつ、年齢を変えて
+  while (people.length < 4 && i < 200){
+    var w = T.state.createWorld(i * 17), h = w.chars[w.heroId];
+    var needF = people.filter(function(p){ return p.sex === 'f'; }).length, needM = people.length - needF;
+    if ((h.sex === 'f' && needF < 2) || (h.sex === 'm' && needM < 2)){
+      h.age = [17, 26, 17, 26][people.length]; if (people.length % 2) { h.life.avatar = true; h.life.job = {color: ['R','G','B'][i % 3], ja:''}; }
+      people.push(h);
+    }
+    i++;
+  }
+  people.sort(function(a, b){ return a.sex < b.sex ? -1 : 1; });
+  function row(id, style){ document.getElementById(id).innerHTML = people.map(function(h, j){ return Portrait(h, id + j, {style: style}); }).join(''); }
+  row('A'); row('B', 'cool'); row('C', 'chibi');
+  // ドット絵：アニメ版を小さく描いてから拡大
+  var box = document.getElementById('D');
+  people.forEach(function(h, j){
+    var svg = Portrait(h, 'D' + j, {style: 'chibi'}), img = new Image(), c = document.createElement('canvas');
+    c.width = 40; c.height = 49; box.appendChild(c);
+    img.onload = function(){ var x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(img, 0, 0, 40, 49); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  });
+})();
+</script>
+</body>
+</html>

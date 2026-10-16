@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#141a1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ミニゲーム — TRIATHLON</title>
+<link rel="icon" href="../icon.svg">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{height:100%;background:#141a1e}
+  body{color:#f1ece2;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    display:flex;justify-content:center;background:radial-gradient(120% 70% at 50% 0%,#2a3a44,#141a1e 70%)}
+  main{width:100%;max-width:480px;min-height:100dvh;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 18px);
+    display:flex;flex-direction:column;gap:14px}
+  h1{font-size:22px;letter-spacing:.15em;text-align:center;margin:6px 0}
+  a.g{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;border-radius:22px;padding:16px;
+    border:1px solid #2c373d;transition:transform .08s}
+  a.g:active{transform:scale(.97)}
+  a.g b{font-size:46px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:#0003}
+  a.g div{flex:1}
+  a.g strong{display:block;font-size:18px}
+  a.g small{display:block;font-size:13px;opacity:.8;margin-top:2px}
+  a.g em{font-style:normal;font-size:13px;font-weight:700;color:#e0b07c}
+  .main{background:linear-gradient(135deg,#3a4a3a,#2a3440)}
+  .hunt{background:linear-gradient(135deg,#3b2a5a,#22203a)}
+  .cards{background:linear-gradient(135deg,#4a3826,#2a2420)}
+  .jump{background:linear-gradient(135deg,#2a4a5a,#1e2a33)}
+  .sec{font-size:12px;color:#93a0a6;letter-spacing:.2em;margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+  <h1>🎮 ミニゲーム</h1>
+  <a class="g hunt" href="./hunt/"><b>👾</b><div><strong>ゆめ狩り</strong><small>タップで倒す。💣はさわらない</small></div><em id="b-hunt"></em></a>
+  <a class="g cards" href="./cards/"><b>🃏</b><div><strong>渡し札めくり</strong><small>同じ札をそろえる</small></div><em id="b-cards"></em></a>
+  <a class="g jump" href="./jump/"><b>🏝️</b><div><strong>霧の島へ</strong><small>タップでとぶ</small></div><em id="b-jump"></em></a>
+  <div class="sec">本編</div>
+  <a class="g main" href="../"><b>🗣️</b><div><strong>名前のない声</strong><small>ひとりの一生を見届ける</small></div></a>
+</main>
+<script>
+  ['hunt','cards','jump'].forEach(function(k){
+    try{ var v = localStorage.getItem('arcade-' + k + '-best'); if (v) document.getElementById('b-' + k).textContent = '🏆 ' + v; }catch(e){}
+  });
+</script>
+</body>
+</html>
