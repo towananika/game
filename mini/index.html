@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>名前のない声 — TRIATHLON ミニ版</title>
+<meta name="description" content="あなたは名前のない声。ひとりの一生に、10年ごとにひとことだけささやく。">
+<style>
+  :root{ --bg:#141a1e; --surface:#1c2429; --line:#2c373d; --text:#e8e4da; --muted:#93a0a6;
+         --wood:#c99f74; --sage:#9dbd97; --water:#7fa7bd; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--text);min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Mincho ProN","Yu Mincho",serif;
+    display:flex;flex-direction:column;align-items:center;
+    padding:18px 16px 28px;gap:16px;line-height:1.95;font-size:16.5px;
+    background-image:radial-gradient(120% 70% at 50% 0%,#1b262c 0%,#141a1e 70%);}
+  main{width:100%;max-width:560px;flex:1;display:flex;flex-direction:column;gap:14px}
+  header{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:baseline}
+  h1{font-size:13px;letter-spacing:.34em;color:var(--muted);font-weight:400}
+  header em{font-style:normal;font-size:11px;color:var(--muted);letter-spacing:.1em}
+  .lake{width:100%;max-width:560px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+  .lake i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--wood),var(--sage));transition:width .8s}
+  h2{font-size:18px;font-weight:400;color:var(--wood);letter-spacing:.06em}
+  .ep p{opacity:0;transform:translateY(6px);animation:rise .9s ease forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .star{color:var(--text)} .star:before{content:"★ ";color:var(--wood)}
+  .quiet{color:var(--muted);font-size:14.5px}
+  .voice{color:var(--water);padding-left:14px;border-left:2px solid var(--line);font-style:italic}
+  .q{font-size:13px;letter-spacing:.12em;color:var(--muted);margin-top:8px}
+  .choices{display:flex;flex-direction:column;gap:10px}
+  button.c{font:inherit;font-size:16px;text-align:left;cursor:pointer;color:var(--text);
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 17px;transition:border-color .25s}
+  button.c:hover{border-color:var(--wood)}
+  button.c small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;white-space:pre-wrap}
+  .past{border-top:1px solid var(--line);padding-top:12px;opacity:.55;font-size:14px}
+  footer{font-size:11.5px;color:var(--muted);letter-spacing:.08em}
+  a{color:var(--sage)}
+  button.link{font:inherit;font-size:12px;background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h1>名 前 の な い 声</h1><em id="step"></em></header>
+<div class="lake"><i id="fill"></i></div>
+<main id="view"></main>
+<footer>TRIATHLON ミニ版 ・ <button class="link" id="reset">はじめから</button></footer>
+<script src="./engine.js"></script>
+<script>
+(function(){
+  var T = window.TRI, KEY = 'tri-mini-v1', s = null;
+  var POLICY = { adventure:['冒険を後押しする','ゆめ・遊び'], family:['家族を大事にさせる','働く・休む'],
+                 study:['学びをすすめる','勉強'], watch:['黙って見守る','本人にまかせる'] };
+  var view = document.getElementById('view');
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+  function load(){ try{ var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+  function esc(t){ return String(t).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function hero(){ return s.chars[s.heroId]; }
+  function others(h){ return Object.keys(s.chars).map(function(k){return s.chars[k];}).filter(function(c){return c.id!==h.id;}); }
+
+  function start(seed){
+    s = T.state.createWorld(seed);
+    s.vault.policy = { allowance:'normal', voice:'watch', decade:true };
+    var h = hero();
+    s.mini = { episode:0, log:[], pages:[[
+      ['h', h.name + '、誕生'],
+      ['p', T.cities.byId(h.birthCity).name + 'で生まれた。夢はまだ知らない。'],
+      ['p', '家族：' + others(h).map(function(c){ return c.name.split(' ')[1]; }).join('・') + '。'],
+      ['v', 'あなたはこの子にしか聞こえない、名前のない声。10年にひとことだけ、ささやける。']
+    ]] };
+    save(); render();
+  }
+
+  function answer(key){
+    s.vault.policy.voice = key;
+    var h = hero(), from = h.age, t0 = s.tick, d0 = h.life.diary.length;
+    s = T.state.advance(s, 40); h = hero(); s.mini.episode += 1;
+    var scenes = (h.life.scenes || []).filter(function(x){ return x.tick >= t0; })
+      .sort(function(a,b){ return b.score-a.score; }).slice(0,4).sort(function(a,b){ return a.tick-b.tick; });
+    var pool = h.life.diary.slice(d0).filter(function(l){ return !scenes.some(function(x){ return x.line===l; }); });
+    var r = T.core.rng(T.core.derive(s.seed, 'mini:' + s.mini.episode));
+    var page = [['h', '第' + s.mini.episode + '話　' + from + '歳〜' + (h.alive ? h.age : h.diedAt) + '歳'],
+                ['v', '「' + POLICY[key][0] + '」とささやいた。']];
+    scenes.forEach(function(x){ page.push(['s', x.line]); });
+    for (var i=0; i<2 && pool.length; i++) page.push(['q', pool.splice(Math.floor(r.next()*pool.length),1)[0]]);
+    if (!h.alive){ page.push(['h', '一生のカード']); page.push(['c', T.text.card(h).join('\n')]); s.mini.done = true; }
+    s.mini.pages.push(page); save(); render(); window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function drawPage(page, cls){
+    var html = '<section class="' + cls + '">';
+    page.forEach(function(x, i){
+      var d = cls==='ep' ? ' style="animation-delay:' + (i*0.35) + 's"' : '';
+      if (x[0]==='h') html += '<h2>' + esc(x[1]) + '</h2>';
+      else if (x[0]==='c') html += '<p class="card"' + d + '>' + esc(x[1]) + '</p>';
+      else html += '<p class="' + ({s:'star',q:'quiet',v:'voice',p:''}[x[0]]) + '"' + d + '>' + esc(x[1]) + '</p>';
+    });
+    return html + '</section>';
+  }
+
+  function render(){
+    var h = hero(), pages = s.mini.pages, html = drawPage(pages[pages.length-1], 'ep');
+    document.getElementById('step').textContent = h.alive ? (h.age + '歳') : '一生を見届けた';
+    document.getElementById('fill').style.width = Math.min(100, (h.alive ? h.age : 100)) + '%';
+    if (!s.mini.done){
+      html += '<p class="q">次の10年、なんとささやく？</p><div class="choices">';
+      Object.keys(POLICY).forEach(function(k){
+        html += '<button class="c" data-k="' + k + '">' + POLICY[k][0] + '<small>' + POLICY[k][1] + '</small></button>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="choices"><button class="c" id="again">べつの一生を見届ける<small>新しい子が生まれる</small></button></div>';
+    }
+    for (var i = pages.length-2; i >= 0; i--) html += '<div class="past">' + drawPage(pages[i], 'old') + '</div>';
+    view.innerHTML = html;
+    view.querySelectorAll('button[data-k]').forEach(function(b){ b.onclick = function(){ answer(b.dataset.k); }; });
+    var a = document.getElementById('again'); if (a) a.onclick = function(){ start(Date.now() % 100000); };
+  }
+
+  document.getElementById('reset').onclick = function(){ if (confirm('はじめからにしますか？')) start(Date.now() % 100000); };
+  s = load();
+  if (s && s.mini) render(); else start(Date.now() % 100000);
+})();
+</script>
+</body>
+</html>
