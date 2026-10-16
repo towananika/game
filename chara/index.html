@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>キャラデザ20種 — 名前のない声</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0e1116;color:#f4f0e8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;padding:16px 12px 40px}
+  h1{font-size:20px;text-align:center;letter-spacing:.1em}
+  .lead{text-align:center;font-size:12px;color:#a3adb5;margin:6px 0 14px}
+  h2{max-width:900px;margin:18px auto 8px;font-size:14px;letter-spacing:.2em;color:#ffcf6e}
+  .grid{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .c{position:relative;border-radius:18px;overflow:hidden;border:1px solid #ffffff22;padding-top:28px}
+  .c .no{position:absolute;left:8px;top:7px;font-size:13px;font-weight:900}
+  .c .no b{color:#ffcf6e;margin-right:3px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;align-items:end}
+  .duo svg{width:100%;height:auto;display:block}
+  .cp{position:absolute;right:6px;top:5px;font:inherit;font-size:11px;font-weight:900;border:none;border-radius:8px;padding:4px 8px;background:#ffcf6e;color:#1a1208}
+  .cp.ok{background:#8fe0a8}
+  .g{background:linear-gradient(160deg,#2f5a3a,#14261a)} .r{background:linear-gradient(160deg,#6a2a20,#2a120c)}
+  .b{background:linear-gradient(160deg,#2a4aa0,#121a3a)} .t{background:linear-gradient(160deg,#3a4a5a,#1a222a)}
+  .m{background:linear-gradient(160deg,#4a5236,#1e2216)} .d{background:linear-gradient(160deg,#5a4a5a,#241c24)}
+</style>
+</head>
+<body>
+<h1>🧑‍🎨 キャラデザ20種</h1>
+<p class="lead">「依頼文」を押すと、GPT・Gemini に貼る文がコピーされます</p>
+<div id="list"></div>
+<script src="../mini/engine.js"></script>
+<script src="../mini/portrait.js"></script>
+<script>
+(function(){
+  var T = window.TRI;
+  var GROUPS = [
+    ['ゆめ・緑の都市', 'g', [['archer','弓使い','緑の革の服と弓と矢筒'],['ranger','レンジャー','深緑のマントとフード、葉の留め具'],['assassin','アサシン','黒紫のフードと口元を隠す布'],['scout','スカウト','革のベストとゴーグル、身軽な装備']]],
+    ['ゆめ・赤の都市', 'r', [['fighter','ファイター','赤いはちまきと拳に巻いた布、動きやすい服'],['warrior','ウォーリア','毛皮の肩当てと大きな剣帯'],['knight','ナイト','銀の鎧と紺の陣羽織、金の飾り']]],
+    ['ゆめ・青の都市', 'b', [['wizard','ウィザード','星のついた大きなとんがり帽子と紺のローブ'],['cleric','クレリック','白いローブとベール、金の太陽の紋章'],['sorcerer','ソーサラー','紫の高い襟のローブと光る額飾り']]],
+    ['うつつ・交通', 't', [['driver','鉄道の運転士','紺の制服と制帽、赤いネクタイ'],['pilot','パイロット','白いシャツと金の線の肩章、黒い制帽'],['captain','船長','白い制服と白い制帽、金ボタン']]],
+    ['うつつ・ミリタリー', 'm', [['soldier','陸の兵士','迷彩の上着とヘルメット'],['navy','海の士官','紺の詰め襟と白い制帽、金ボタン'],['airforce','空のパイロット','フライトスーツとサングラス、部隊章']]],
+    ['うつつ・日常と恋', 'd', [['student','学生','学ランとセーラー服'],['office','会社員','スーツとネクタイ、社員証'],['cafe','カフェ店員','白シャツと茶色のエプロン、ベレー帽'],['date','デート服','やわらかい色の私服と小さなネックレス']]]
+  ];
+  // 男女ひとりずつ（同じ2人に着せかえる）
+  var pair = [], i = 3;
+  while (pair.length < 2 && i < 200){ var w = T.state.createWorld(i * 13), h = w.chars[w.heroId];
+    if (!pair.some(function(p){ return p.sex === h.sex; })){ h.age = 24; pair.push(h); } i++; }
+  pair.sort(function(a, b){ return a.sex < b.sex ? -1 : 1; });
+  var BASE = 'アニメ風のスマホゲーム用キャラクターデザイン。20〜30代向けのかっこいい絵柄。はっきりした線とセル影。ブルーアーカイブや原神くらいの完成度。正面の全身立ち絵、無地の白い背景、文字やロゴなし。男女2人を並べて描く。';
+  var n = 0, html = '';
+  GROUPS.forEach(function(g){
+    html += '<h2>' + g[0] + '</h2><div class="grid">';
+    g[2].forEach(function(x){
+      n++;
+      var prompt = BASE + '世界：' + g[0] + '。職業：' + x[1] + '。服装：' + x[2] + '。';
+      html += '<div class="c ' + g[1] + '"><div class="no"><b>' + n + '</b>' + x[1] + '</div>' +
+        '<button class="cp" data-p="' + prompt.replace(/"/g, '&quot;') + '">依頼文</button><div class="duo">' +
+        pair.map(function(h, j){ return Portrait(h, 'c' + n + '_' + j, {outfit: x[0]}); }).join('') + '</div></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('list').innerHTML = html;
+  document.querySelectorAll('.cp').forEach(function(b){
+    b.onclick = function(){
+      var t = b.dataset.p;
+      function done(){ b.textContent = 'コピーした'; b.classList.add('ok'); setTimeout(function(){ b.textContent = '依頼文'; b.classList.remove('ok'); }, 1500); }
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function(){ prompt('コピーしてください', t); });
+      else prompt('コピーしてください', t);
+    };
+  });
+})();
+</script>
+</body>
+</html>
