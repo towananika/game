@@ -7,51 +7,102 @@
 <title>絵柄の見本 — 名前のない声</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0e1116;color:#f4f0e8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;padding:20px 16px 40px}
-  main{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-  h1{font-size:22px;text-align:center;letter-spacing:.1em}
-  .s{border-radius:22px;overflow:hidden;border:1px solid #ffffff22;background:radial-gradient(120% 90% at 50% 10%,#3b4d6a,#141a22)}
-  .s h2{font-size:18px;padding:12px 16px 0}
-  .s h2 b{display:inline-block;width:30px;height:30px;line-height:30px;text-align:center;border-radius:9px;background:#ffcf6e;color:#1a1208;margin-right:8px}
-  .s p{font-size:13px;color:#a3adb5;padding:4px 16px 0}
-  .duo{display:grid;grid-template-columns:repeat(4,1fr);align-items:end;padding:6px 6px 0}
+  body{background:#0e1116;color:#f4f0e8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;padding:16px 12px 40px}
+  h1{font-size:20px;text-align:center;letter-spacing:.1em;margin-bottom:12px}
+  main{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .s{position:relative;border-radius:20px;overflow:hidden;border:1px solid #ffffff22}
+  .s .no{position:absolute;left:10px;top:10px;z-index:2;font-size:15px;font-weight:900;background:#000a;border-radius:10px;padding:3px 10px;backdrop-filter:blur(4px)}
+  .s .no b{color:#ffcf6e;margin-right:4px}
+  .duo{display:grid;grid-template-columns:repeat(4,1fr);align-items:end;padding:34px 4px 0}
   .duo svg,.duo canvas{width:100%;height:auto;display:block}
-  .pix canvas{image-rendering:pixelated}
+  .duo canvas{image-rendering:pixelated}
 </style>
 </head>
 <body>
-<main>
-  <h1>🎨 絵柄の見本</h1>
-  <section class="s"><h2><b>A</b>アニメ</h2><p>いまの絵柄。大きな瞳でやわらかい。</p><div class="duo" id="A"></div></section>
-  <section class="s"><h2><b>B</b>クール</h2><p>切れ長の目、影と青いふちどり。かっこよさ重視。</p><div class="duo" id="B"></div></section>
-  <section class="s"><h2><b>C</b>ちびキャラ</h2><p>頭が大きい2頭身。かわいさ重視。</p><div class="duo" id="C"></div></section>
-  <section class="s pix"><h2><b>D</b>ドット絵</h2><p>レトロゲーム風。小さくても目立つ。</p><div class="duo" id="D"></div></section>
-</main>
+<h1>🎨 絵柄の見本（20種）</h1>
+<main id="list"></main>
+<svg width="0" height="0" style="position:absolute"></svg>
 <script src="../mini/engine.js"></script>
 <script src="../mini/portrait.js"></script>
 <script>
 (function(){
   var T = window.TRI, people = [], i = 1;
-  // 男子・女子を2人ずつ、年齢を変えて
   while (people.length < 4 && i < 200){
     var w = T.state.createWorld(i * 17), h = w.chars[w.heroId];
-    var needF = people.filter(function(p){ return p.sex === 'f'; }).length, needM = people.length - needF;
-    if ((h.sex === 'f' && needF < 2) || (h.sex === 'm' && needM < 2)){
-      h.age = [17, 26, 17, 26][people.length]; if (people.length % 2) { h.life.avatar = true; h.life.job = {color: ['R','G','B'][i % 3], ja:''}; }
+    var f = people.filter(function(p){ return p.sex === 'f'; }).length, m = people.length - f;
+    if ((h.sex === 'f' && f < 2) || (h.sex === 'm' && m < 2)){
+      h.age = people.length % 2 ? 26 : 17;
+      if (people.length % 2){ h.life.avatar = true; h.life.job = {color:['R','G','B'][i % 3], ja:''}; }
       people.push(h);
     }
     i++;
   }
   people.sort(function(a, b){ return a.sex < b.sex ? -1 : 1; });
-  function row(id, style){ document.getElementById(id).innerHTML = people.map(function(h, j){ return Portrait(h, id + j, {style: style}); }).join(''); }
-  row('A'); row('B', 'cool'); row('C', 'chibi');
-  // ドット絵：アニメ版を小さく描いてから拡大
-  var box = document.getElementById('D');
-  people.forEach(function(h, j){
-    var svg = Portrait(h, 'D' + j, {style: 'chibi'}), img = new Image(), c = document.createElement('canvas');
-    c.width = 40; c.height = 49; box.appendChild(c);
-    img.onload = function(){ var x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(img, 0, 0, 40, 49); };
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
+  // SVGフィルター（立ち絵の中に入れる）
+  var F = {
+    mono:   '<feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0 .15 .5 .85 1"/><feFuncG type="discrete" tableValues="0 .15 .5 .85 1"/><feFuncB type="discrete" tableValues="0 .15 .5 .85 1"/></feComponentTransfer>',
+    sepia:  '<feColorMatrix type="matrix" values=".39 .77 .19 0 0 .35 .69 .17 0 0 .27 .53 .13 0 0 0 0 0 1 0"/>',
+    neon:   '<feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .2  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>',
+    water:  '<feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/><feGaussianBlur stdDeviation=".8"/>',
+    pastel: '<feColorMatrix type="saturate" values=".45"/><feComponentTransfer><feFuncR type="linear" slope=".7" intercept=".3"/><feFuncG type="linear" slope=".7" intercept=".3"/><feFuncB type="linear" slope=".7" intercept=".32"/></feComponentTransfer>',
+    line:   '<feColorMatrix type="saturate" values="0"/><feConvolveMatrix order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="true"/><feComponentTransfer><feFuncR type="table" tableValues="1 0"/><feFuncG type="table" tableValues="1 0"/><feFuncB type="table" tableValues="1 0"/></feComponentTransfer>',
+    oil:    '<feTurbulence type="turbulence" baseFrequency=".09" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="5" result="d"/><feColorMatrix in="d" type="saturate" values="1.6"/>',
+    poster: '<feComponentTransfer><feFuncR type="discrete" tableValues="0 .4 .8 1"/><feFuncG type="discrete" tableValues="0 .4 .8 1"/><feFuncB type="discrete" tableValues="0 .4 .8 1"/></feComponentTransfer><feColorMatrix type="saturate" values="1.5"/>',
+    cyber:  '<feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="r"/><feOffset in="r" dx="-3" result="r2"/><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" result="gb"/><feOffset in="gb" dx="3" result="gb2"/><feBlend in="r2" in2="gb2" mode="screen"/>',
+    sil:    '<feColorMatrix type="matrix" values="0 0 0 0 .05 0 0 0 0 .05 0 0 0 0 .1 0 0 0 1 0" result="d"/><feGaussianBlur in="SourceAlpha" stdDeviation="2.5"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 .6 0 0 0 0 .3 0 0 0 1.4 0" result="glow"/><feMerge><feMergeNode in="glow"/><feMergeNode in="d"/></feMerge>',
+    ukiyo:  '<feColorMatrix type="matrix" values=".5 .5 .1 0 .05 .35 .55 .1 0 .03 .2 .35 .25 0 0 0 0 0 1 0"/><feComponentTransfer><feFuncR type="discrete" tableValues=".1 .45 .8 .95"/><feFuncG type="discrete" tableValues=".1 .4 .7 .9"/><feFuncB type="discrete" tableValues=".1 .3 .55 .8"/></feComponentTransfer>',
+    gold:   '<feColorMatrix type="matrix" values=".6 .6 .2 0 .1 .45 .5 .15 0 .05 .15 .2 .1 0 0 0 0 0 1 0"/><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>',
+    night:  '<feColorMatrix type="matrix" values=".35 0 0 0 0 0 .45 0 0 .02 0 .1 .8 0 .1 0 0 0 1 0"/>',
+    dream:  '<feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge><feColorMatrix type="saturate" values=".8"/>',
+    gekiga: '<feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="linear" slope="2.4" intercept="-.7"/><feFuncG type="linear" slope="2.4" intercept="-.7"/><feFuncB type="linear" slope="2.4" intercept="-.7"/></feComponentTransfer>',
+    glass:  '<feComponentTransfer><feFuncR type="discrete" tableValues=".1 .5 .9"/><feFuncG type="discrete" tableValues=".1 .5 .9"/><feFuncB type="discrete" tableValues=".2 .6 1"/></feComponentTransfer><feMorphology operator="erode" radius="1"/>'
+  };
+  // [番号の名前, 背景, 描き方, フィルター, ドットの大きさ]
+  var STY = [
+    ['アニメ','linear-gradient(160deg,#3b4d6a,#141a22)','',null],
+    ['クール','linear-gradient(160deg,#1c2b44,#0a0f18)','cool',null],
+    ['ちびキャラ','linear-gradient(160deg,#ffd6e0,#ffe9c9)','chibi',null],
+    ['ドット絵','linear-gradient(160deg,#2a2a5a,#141430)','chibi',null,40],
+    ['細かいドット','linear-gradient(160deg,#284a5a,#12222a)','',null,72],
+    ['漫画（白黒）','#f4f1ea','','mono'],
+    ['セピア','linear-gradient(160deg,#c9a77a,#6a4e30)','','sepia'],
+    ['ネオン','#07070f','cool','neon'],
+    ['水彩','linear-gradient(160deg,#f6f1e7,#e3ecef)','','water'],
+    ['パステル','linear-gradient(160deg,#fde7f3,#e3f1ff)','chibi','pastel'],
+    ['線画','#ffffff','','line'],
+    ['油絵','linear-gradient(160deg,#5a3a2a,#2a1a14)','','oil'],
+    ['ポスター','linear-gradient(160deg,#ff6b4a,#ffb84a)','cool','poster'],
+    ['サイバー','linear-gradient(160deg,#120a2a,#001a2a)','cool','cyber'],
+    ['影絵','linear-gradient(160deg,#ff9a5a,#5a1a4a)','','sil'],
+    ['浮世絵風','linear-gradient(160deg,#e9dcc0,#cdb98a)','','ukiyo'],
+    ['ゴールド','linear-gradient(160deg,#2a1e0a,#0e0a04)','cool','gold'],
+    ['夜','linear-gradient(160deg,#0a1430,#02040a)','','night'],
+    ['ゆめかわ','linear-gradient(160deg,#e0c8ff,#ffc8e8)','chibi','dream'],
+    ['劇画','#ffffff','cool','gekiga']
+  ];
+
+  function styled(svg, key, uid){
+    if (!key) return svg;
+    var id = 'f' + uid, open = svg.indexOf('>') + 1;
+    return svg.slice(0, open) + '<defs><filter id="' + id + '" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">' + F[key] + '</filter></defs><g filter="url(#' + id + ')">' +
+      svg.slice(open, svg.lastIndexOf('</svg>')) + '</g></svg>';
+  }
+
+  var list = document.getElementById('list');
+  STY.forEach(function(st, n){
+    var sec = document.createElement('section'); sec.className = 's'; sec.style.background = st[1];
+    sec.innerHTML = '<div class="no"><b>' + (n + 1) + '</b>' + st[0] + '</div><div class="duo"></div>';
+    var duo = sec.querySelector('.duo');
+    people.forEach(function(h, j){
+      var svg = styled(Portrait(h, 's' + n + '_' + j, {style: st[2]}), st[3], n + '_' + j);
+      if (!st[4]){ duo.insertAdjacentHTML('beforeend', svg); return; }
+      var c = document.createElement('canvas'), img = new Image(), W = st[4], H = Math.round(W * 244 / 200);
+      c.width = W; c.height = H; duo.appendChild(c);
+      img.onload = function(){ var x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(img, 0, 0, W, H); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+    list.appendChild(sec);
   });
 })();
 </script>
