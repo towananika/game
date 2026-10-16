@@ -61,6 +61,14 @@
     display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px #0008;transform:scale(0);transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
   .think:after{content:"";position:absolute;left:4px;bottom:-6px;width:14px;height:14px;border-radius:50%;background:#fff}
   .think.on{transform:scale(1)}
+  .talk{position:absolute;left:14px;right:30%;top:16%;z-index:5;background:#fffffff2;color:#1b1f26;border-radius:18px 18px 18px 4px;
+    padding:10px 14px;font-size:15px;font-weight:800;line-height:1.5;box-shadow:0 8px 24px #0009;transform:scale(0);transform-origin:left bottom;
+    transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+  .talk.on{transform:scale(1)}
+  .talk small{display:block;font-size:10px;color:#7a8490;font-weight:900;letter-spacing:.1em}
+  .bond{font-size:12px;letter-spacing:1px;margin-left:6px;color:#ff8fb1;text-shadow:0 0 6px #ff4f8b88}
+  .card .last{font-size:14px;font-weight:700;line-height:1.7;background:#ffffff14;border-radius:14px;padding:10px 12px;margin:10px 0;color:#fff}
+  .card .last small{display:block;font-size:10px;color:var(--muted);letter-spacing:.15em}
   .fly{position:absolute;z-index:4;font-weight:900;font-size:22px;pointer-events:none;text-shadow:0 2px 8px #000;animation:fly 1.6s ease-out forwards}
   @keyframes fly{0%{opacity:0;transform:translateY(16px) scale(.5)}15%{opacity:1;transform:scale(1.25)}30%{transform:scale(1)}100%{opacity:0;transform:translateY(-80px)}}
 
@@ -151,8 +159,9 @@
     <div class="aura"></div>
     <div class="por" id="por"></div>
     <div class="think" id="think"></div>
+    <div class="talk" id="talk"></div>
     <div class="plate">
-      <div class="nm"><div class="stars" id="stars"></div><h2 id="name"></h2><div class="tags" id="tags"></div></div>
+      <div class="nm"><div class="stars"><span id="stars"></span><span class="bond" id="bond"></span></div><h2 id="name"></h2><div class="tags" id="tags"></div></div>
       <div class="emb" id="emb"></div>
     </div>
   </div>
@@ -249,6 +258,7 @@
     $('por').classList.toggle('dead', !h.alive);
     $('stars').textContent = '★★★★★'.slice(0, stars(h)) + '☆☆☆☆☆'.slice(0, 5 - stars(h));
     $('name').textContent = h.name;
+    var bn = Math.round(h.voice.trust * 5); $('bond').textContent = '♥'.repeat(bn) + '♡'.repeat(5 - bn);
     var tags = [T.cities.byId(h.birthCity).name];
     (h.dreams || []).slice(0,1).forEach(function(d){ tags.push('✨ ' + d.text); });
     if (h.life.job) tags.push(h.life.job.ja);
@@ -269,6 +279,29 @@
   function think(icon){
     var t = $('think'); t.textContent = icon; t.classList.add('on');
     setTimeout(function(){ t.classList.remove('on'); }, 2600);
+  }
+
+  // 1対1の物語：キャラが声に返事をする（オフラインでも満足を）
+  var LINES = {
+    kid:   {yes:['えへへ、たのしかった！','また、おしえてね。','ねえ、あなたはだれ？'], no:['やだ、こっちがいい！','しらないもん。'], watch:['……だれかいるの？']},
+    hi:    {yes:['うん、そうしてみた。','あなたの言うとおりだった。','また聞こえたね。ありがとう。'], no:['ごめん、今回は自分で決めた。','わかってる。でも、こっちを選んだ。'], watch:['黙ってても、そばにいるのはわかる。']},
+    lo:    {yes:['……たまたま、だよ。','別に、言われたからじゃない。'], no:['誰の声？ ほっといて。','自分の道は自分で決める。'], watch:['静かだね。それでいい。']},
+    old:   {yes:['長い付き合いになったね。','あなたの声、年をとらないね。'], no:['この年になると、頑固でね。'], watch:['ふふ、今日は静かだ。']}};
+  function talkLine(h, c, followed){
+    var a = age(h), set = a < 13 ? LINES.kid : a >= 60 ? LINES.old : h.voice.trust >= .4 ? LINES.hi : LINES.lo;
+    var pool = c.k === 'watch' ? set.watch : followed ? set.yes : set.no;
+    return pool[(s.mini.episode + a) % pool.length];
+  }
+  function lastWords(h){
+    var t = h.voice.trust;
+    return t >= .6 ? 'ずっと、あなたの声が好きだった。またどこかで。' : t >= .3 ? 'あなたが誰だったのか、最後までわからなかった。でも、悪くなかった。' : '自分で決めた一生だった。……でも、ありがとう。';
+  }
+  function talk(text){
+    var el = $('talk'), name = hero().name.split(' ')[1], i = 0;
+    el.innerHTML = '<small>' + esc(name) + '</small><span></span>'; el.classList.add('on');
+    var sp = el.querySelector('span'), iv = setInterval(function(){ sp.textContent = text.slice(0, ++i); if (i % 2) BGM.sfx('tap'); if (i >= text.length) clearInterval(iv); }, 45);
+    clearTimeout(talk.t); talk.t = setTimeout(function(){ el.classList.remove('on'); }, 1800 + text.length * 70);
+    el.onclick = function(){ el.classList.remove('on'); };
   }
 
   function fly(text, color, x, y){
@@ -335,6 +368,9 @@
         if (d) setTimeout(function(){ fly(x[1] + (d > 0 ? '+' : '') + d, d > 0 ? '#8fe0a8' : '#ff6b7f', 8 + i*18, 55); BGM.sfx(d > 0 ? 'up' : 'down'); if (d > 0) buzz(6); }, 250 + i*160); });
       var best = null, bn = 0; for (var k in h.life.counts){ var dd = h.life.counts[k] - (c0[k] || 0); if (dd > bn){ bn = dd; best = k; } }
       if (best) setTimeout(function(){ think(THINK[best] || '💭'); }, 1200);
+      var push = {adventure:['yume','play'], family:['work','rest'], study:['study']}[c.k] || [];
+      var line = talkLine(h, c, push.indexOf(best) >= 0);
+      if (h.alive) setTimeout(function(){ talk(line); }, 1700);
       setTimeout(function(){ busy = false; drawChoices(); if (!h.alive) setTimeout(endCard, 900); }, 1500);
     }, 650);
   }
@@ -349,6 +385,7 @@
     $('sheet').innerHTML = '<div class="card"><div class="burst"></div>' +
       '<div class="pic">' + Portrait(h, 'e') + '</div><h3>' + esc(h.name) + '</h3>' +
       '<div class="sub">' + T.cities.byId(h.birthCity).name + ' ・ ' + h.diedAt + '歳で とこよへ</div>' +
+      '<div class="last"><small>最後のひとこと</small>「' + esc(lastWords(h)) + '」</div>' +
       '<div class="rib">' + main[1] + ' ' + main[2] + (isNew.indexOf(main[0]) >= 0 ? '　NEW' : '') + '</div>' +
       '<div class="row">' + others.map(function(r){ return '<span class="chip">' + r[1] + ' ' + r[2] + '</span>'; }).join('') + '</div>' +
       '<div class="lifebar">' + seg + '</div>' +

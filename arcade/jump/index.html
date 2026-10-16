@@ -119,7 +119,7 @@ let holding=false,holdT=0,jumpBuf=0;
 function reset(){
   P={x:0,y:0,vy:0,ground:true,jumps:0,coyote:0,rot:0,squash:0,blink:2,alive:true,splash:false};
   islands=[];gulls=[];waves=[];items=[];parts=[];
-  camX=-VW*0.3;speed=300;time=0;dist=0;bonus=0;coins=0;nextGull=6;
+  camX=-VW*0.3;speed=300;time=0;dist=0;bonus=0;coins=0;nextGull=9;
   fog=0;fogT=0;nextFog=14+Math.random()*6;shake=0;deadT=0;
   // first long island
   islands.push({x:-260,w:520,y:520,seed:Math.random()});
@@ -130,7 +130,7 @@ function reset(){
 function diff(){return Math.min(1,time/65)}
 function genIsland(){
   const d=diff();
-  const gapMin=speed*(0.16+0.08*d), gapMax=speed*(0.36+0.16*d);
+  const gapMin=speed*(0.12+0.1*d), gapMax=speed*(0.3+0.2*d);
   const gap=gapMin+Math.random()*(gapMax-gapMin);
   const prev=islands[islands.length-1];
   const w=Math.max(70,(200-90*d)*(0.55+Math.random()*0.75));
@@ -244,14 +244,14 @@ function update(dt){
     if(P.coyote>0)P.coyote-=dt;
     const wasGround=P.ground;P.ground=false;
     for(const s of islands){
-      if(P.x+PR*0.55<s.x||P.x-PR*0.55>s.x+s.w)continue;
-      if(P.vy>=0&&prevB<=s.y+2&&P.y+PR>=s.y){
+      if(P.x+PR*0.8<s.x||P.x-PR*0.8>s.x+s.w)continue;
+      if(P.vy>=0&&prevB<=s.y+14&&P.y+PR>=s.y){
         P.y=s.y-PR;P.vy=0;P.ground=true;P.jumps=0;
         if(!wasGround){P.squash=0.3;dust(P.x,s.y,5);blip(180,0.05,'sine',0.05)}
         if(jumpBuf>0){tryJump(false);}
         break;
       }
-      if(P.y+PR>s.y+10&&P.y-PR<s.y+200&&Math.abs(P.x-s.x)<PR*0.9&&P.x<s.x+PR){die(false);break}
+      if(P.y+PR>s.y+16&&P.y-PR<s.y+200&&Math.abs(P.x-s.x)<PR*0.9&&P.x<s.x+PR){die(false);break}
     }
     if(wasGround&&!P.ground&&P.vy>=0){P.coyote=0.08;P.jumps=1}
     if(P.ground)P.coyote=0;
