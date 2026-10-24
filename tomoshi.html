@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>灯し</title>
+<style>
+:root{--bg:#14110f;--fg:#ece5dd;--dim:#9a9088;--line:#2e2924;--wood:#c8a87c;--ok:#7fb069;--ng:#c96f6f;--sub:#1d1a17;--quiet:#8fb8c8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.8 "Hiragino Sans","Yu Gothic",sans-serif;
+ display:flex;justify-content:center;padding:18px 16px 60px}
+.wrap{width:100%;max-width:560px}
+h1{font-size:17px;margin:0 0 2px;font-weight:600}
+h2{font-size:14px;margin:24px 0 8px;color:var(--wood);font-weight:600}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:18px}
+.card{border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:12px}
+button{font:inherit;background:none;color:var(--fg);border:1px solid var(--line);
+ border-radius:7px;padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--wood)}
+button:disabled{opacity:.32;cursor:default}
+.go{width:100%;margin-top:6px;padding:12px;border-color:var(--wood);color:var(--wood)}
+.ghost{width:100%;margin-top:8px;padding:10px;font-size:13px;color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td{padding:6px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.note{font-size:12px;color:var(--dim);line-height:1.75;margin-top:10px}
+.big{font-size:26px;color:var(--wood);font-weight:600;line-height:1.3}
+
+/* 上の数字の帯 */
+.hud{display:flex;gap:6px;margin-bottom:18px}
+.hud div{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 4px;text-align:center}
+.hud .k{font-size:10.5px;color:var(--dim);display:block;line-height:1.5}
+.hud .v{font-size:17px;font-weight:600;line-height:1.35}
+.hud .q .v{color:var(--quiet)}
+.hud .o .v{color:var(--wood)}
+
+/* 気配 */
+.scene{min-height:104px;display:flex;flex-direction:column;justify-content:center;
+ padding:4px 2px 14px;font-size:16px;line-height:1.9;white-space:pre-line}
+.gain{font-size:13px;color:var(--ok);min-height:22px;margin-bottom:4px}
+.gain.reset{color:var(--ng)}
+
+/* 3つの声 */
+.voices{display:flex;flex-direction:column;gap:8px}
+.voices button{display:flex;justify-content:space-between;align-items:baseline;
+ width:100%;padding:12px 14px;text-align:left;gap:10px}
+.voices .nm{font-size:15.5px}
+.voices .ef{font-size:11.5px;color:var(--dim);text-align:right;line-height:1.6;white-space:nowrap}
+.voices button.w{border-color:#3d4a50}
+.voices button.w:hover{border-color:var(--quiet)}
+.voices button.l:hover{border-color:var(--ng)}
+
+.hint{font-size:12.5px;color:var(--dim);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.hint b{color:var(--wood);font-weight:600}
+
+/* 種火 */
+.seeds{display:flex;flex-direction:column;gap:8px}
+.seeds button{width:100%;padding:12px 14px;text-align:left}
+.seeds .nm{font-size:15px;color:var(--wood)}
+.seeds .ds{font-size:12.5px;color:var(--dim);line-height:1.7}
+.held{font-size:12px;color:var(--dim);margin-top:12px}
+.held span{border:1px solid var(--line);border-radius:20px;padding:2px 9px;margin-right:5px;
+ display:inline-block;margin-bottom:5px;color:var(--wood)}
+
+/* 39の灯り */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:6px;margin-top:4px}
+.grid i{aspect-ratio:1;border:1px solid var(--line);border-radius:6px;display:flex;
+ align-items:center;justify-content:center;font-size:11px;font-style:normal;color:#4a443e;cursor:default}
+.grid i.on{border-color:var(--wood);color:var(--wood);background:#1e1a15;cursor:pointer}
+.who{margin-top:14px;font-size:13.5px;line-height:1.85}
+.who b{color:var(--wood);font-weight:600}
+.foot{font-size:12px;color:var(--dim);line-height:1.75;margin-top:34px;border-top:1px solid var(--line);padding-top:16px}
+.mute{float:right;font-size:11.5px;color:var(--dim);border:none;padding:2px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<button class="mute" id="mute" onclick="toggleSound()"></button>
+<h1>灯し</h1>
+<div class="sub" id="sub">夜、ひとりを見つける</div>
+<div id="app"></div>
+
+<div class="foot">
+夜がいちど明けるまで、3〜5分。失うものはありません。<br>
+つらさが続くときは、ひとりで抱えずに、相談できる場所があります。→ 窓口（公開前に番号を確認）
+</div>
+
+<script>
+/* ===========================================================
+   灯し（ともし） — 1ラン3〜5分。カジュアルな見た目、濃い経済。
+   芯: 「一歩目は小さくていい」を、説教ではなく掛け算で証明する。
+        ささやく = 安い・複利（静けさが伸びる）
+        はっきり = 即効・だが静けさが 1.0 に戻る
+   docs/triathlon_vision.md §5.2 / game_taste_and_trends.md §4-A
+   =========================================================== */
+
+/* ---- 乱数（種から決まる。同じ種なら同じ夜） ---- */
+function rngOf(seed){
+  var a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) >>> 0;
+    var t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function newSeed(){ return (Math.random() * 0xFFFFFF) | 0; }
+
+/* ---- 音（Hibikiが直した木と鈴の音を、簡略に持ってくる） ---- */
+var AC = null, SOUND = true;
+function ac(){
+  if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = false; } }
+  return AC || null;
+}
+/* 木: 短い雑音をローパスで丸める。ささやくほど小さく低く */
+function wood(vol, cut){
+  var c = ac(); if(!c || !SOUND) return;
+  var n = 0.055, buf = c.createBuffer(1, c.sampleRate * n, c.sampleRate), d = buf.getChannelData(0);
+  for(var i = 0; i < d.length; i++){ d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); }
+  var s = c.createBufferSource(); s.buffer = buf;
+  var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cut;
+  var g = c.createGain(); g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+}
+/* 鈴（りん）: 基音880Hz、倍音 1 : 2.71 : 5.2、約1.6秒（tool CHANGELOG v3.4 の実測どおり） */
+function bell(){
+  var c = ac(); if(!c || !SOUND) return;
+  var t = c.currentTime, g = c.createGain();
+  g.gain.setValueAtTime(0.16, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+  g.connect(c.destination);
+  [[880, 1], [2385, 0.5], [4576, 0.22]].forEach(function(p){
+    var o = c.createOscillator(), og = c.createGain();
+    o.type = 'sine'; o.frequency.value = p[0]; og.gain.value = p[1];
+    o.connect(og); og.connect(g); o.start(t); o.stop(t + 1.6);
+  });
+}
+function toggleSound(){ SOUND = !SOUND; save(); paintMute(); if(SOUND) wood(0.12, 1400); }
+function paintMute(){ document.getElementById('mute').textContent = SOUND ? '音 ●' : '音 ○'; }
+
+/* ---- 永続データ ---- */
+var KEY = 'tomoshi.v1';
+var P = { found: [], best: 0, runs: 0, sound: true };
+function load(){
+  try{
+    var o = JSON.parse(localStorage.getItem(KEY) || '{}');
+    if(o.found) P.found = o.found;
+    P.best = o.best || 0; P.runs = o.runs || 0;
+    if(o.sound === false) SOUND = false;
+  }catch(e){}
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify({ found: P.found, best: P.best, runs: P.runs, sound: SOUND })); }catch(e){}
+}
+
+/* ---- 39人 ----
+   WORLDVIEW.md に原風景が書かれている人だけ名前を出す。
+   残りは空欄のまま。「本人が書いていないことは書かない」（vision の規則）。 */
+var PEOPLE = [
+  { n: '亞美',   l: '編み物が得意。漫画の新刊を、ずっと待っている。' },
+  { n: 'マキ',   l: '体操部。帰りにぬいぐるみを抱えている。花冠を作るのが好き。' },
+  { n: '日向',   l: '木陰で座っている。野の花を摘む。「……べつに」' },
+  { n: 'レオナ', l: 'チャーハンが得意。勉強をがんばっている。' },
+  { n: '鳩羽',   l: 'パンケーキ。ホイップクリームと、いちご。' },
+  { n: '惠美',   l: '「えー！」「すごーい！」毎朝、誰かと一緒に登校する。' },
+  { n: 'まゆみ', l: '面倒見がいい。「だーれだ」と後ろから来る。' },
+  { n: '優',     l: '花火が好き。一人称は「ぼく」。' },
+  { n: '美紀',   l: '（原風景は、まだ書かれていない）' },
+  { n: '美夜子', l: '（原風景は、まだ書かれていない）' }
+];
+function person(i){ return PEOPLE[i] || { n: '', l: '' }; }
+
+/* ---- 気配（1歩ごとの短い一行。カジュアルに、読ませすぎない） ---- */
+var SIGNS = [
+  '草が、鳴った。', '水面が、すこし動いた。', '遠くで、火が跳ねた。',
+  '風が、やんだ。', '足あとが、ひとつ。', '木の影が、ゆれた。',
+  '鳥が、一度だけ鳴いた。', '土の匂いが、濃くなった。', '星が、ひとつ増えた。',
+  '毛布のような、あたたかさ。', '誰かの寝息みたいな音。', '霧が、うすくなった。'
+];
+
+/* ---- 種火（焚き火で引く。ローグライトのドラフト） ---- */
+var SEEDS = [
+  { id: 'spoon',   n: '木の匙',       d: 'ささやく の響きが +1 になる' },
+  { id: 'bell',    n: '鈴',           d: '静けさ の伸びが +0.3 → +0.5 になる' },
+  { id: 'blanket', n: '毛布',         d: 'いま 息 +4' },
+  { id: 'ribbon',  n: '赤いリボン',   d: '夜の終わりに 響き +10' },
+  { id: 'crown',   n: '花冠',         d: 'ふつうに の響きが +2 になる' },
+  { id: 'mirror',  n: '鏡湖',         d: 'いま 静けさ ×1.5' },
+  { id: 'ember',   n: '焚き火の残り', d: 'はっきり でも 静けさ が戻らない' },
+  { id: 'knit',    n: '編み物',       d: '3歩ごとに 油 +1' }
+];
+function seedOf(id){ for(var i = 0; i < SEEDS.length; i++){ if(SEEDS[i].id === id) return SEEDS[i]; } return null; }
+
+/* ---- ラン ---- */
+var R = null;
+var CHALLENGE = 0;   /* 渡された夜の響き */
+var SEEDPARAM = 0;   /* URLで指定された種 */
+
+function startRun(seed){
+  R = {
+    seed: seed, rnd: rngOf(seed),
+    breath: 12, echo: 0, quiet: 1.0, oil: 3,
+    step: 0, held: [], sign: '', gain: '', reset: false, atFire: false, mile: 1,
+    fires: 0, over: false, target: seed % 10
+  };
+  R.sign = pick(SIGNS);
+  view();
+}
+function pick(a){ return a[Math.floor(R.rnd() * a.length)]; }
+function has(id){ return R.held.indexOf(id) >= 0; }
+
+/* 声を出す */
+function speak(kind){
+  if(R.over || R.atFire) return;
+  var cost = kind === 'w' ? 1 : kind === 'n' ? 2 : 3;
+  if(cost > R.breath) return;              /* 息が足りない声は出ない */
+  var before = R.quiet, add = 0;
+  R.reset = false;
+
+  if(kind === 'w'){                        /* ささやく */
+    R.breath -= 1;
+    add = (1 + (has('spoon') ? 1 : 0)) * R.quiet;
+    R.quiet += has('bell') ? 0.5 : 0.3;
+    wood(0.10, 900);
+  } else if(kind === 'n'){                  /* ふつうに */
+    R.breath -= 2;
+    add = (3 + (has('crown') ? 2 : 0)) * R.quiet;
+    wood(0.20, 1500);
+  } else {                                  /* はっきり */
+    R.breath -= 3;
+    add = 5;
+    R.oil += 3;
+    if(!has('ember')){ R.quiet = 1.0; R.reset = before > 1.0; }
+    wood(0.30, 2600);
+  }
+
+  R.echo += add;
+  R.step += 1;
+  if(has('knit') && R.step % 3 === 0) R.oil += 1;
+
+  /* 静けさが段を超えると油が入る。大声は即座に油、静けさは積んで油。 */
+  var mile = false;
+  while(R.quiet >= R.mile + 1 && R.mile < 5){ R.mile += 1; R.oil += 2; mile = true; }
+
+  R.gain = '響き +' + fmt(add) +
+           (mile ? '　静けさ ' + R.mile + '.0 をこえた → 油 +2' : '') +
+           (R.reset ? '　静けさ が 1.0 に戻った' : '');
+
+  /* 焚き火は3歩目・7歩目・10歩目に立つ。10歩目はささやきを重ねた人だけ届く */
+  if((R.step === 3 || R.step === 7 || R.step === 10) && R.breath > 0 && R.fires < 3){
+    R.fires += 1;
+    R.atFire = true;
+    R.draft = draft();
+    view('fire');
+    return;
+  }
+  if(R.breath <= 0){ finish(); return; }
+  R.sign = pick(SIGNS);
+  view();
+}
+function draft(){
+  var pool = SEEDS.filter(function(s){ return !has(s.id); }), out = [];
+  for(var i = 0; i < 3 && pool.length; i++){ out.push(pool.splice(Math.floor(R.rnd() * pool.length), 1)[0]); }
+  return out;
+}
+function takeSeed(id){
+  if(!R.atFire) return;
+  if(id){
+    if(R.oil < 2) return;
+    R.oil -= 2; R.held.push(id);
+    if(id === 'blanket') R.breath += 4;
+    if(id === 'mirror')  R.quiet = Math.round(R.quiet * 1.5 * 10) / 10;
+    bell();
+  }
+  R.atFire = false;
+  if(R.breath <= 0){ finish(); return; }
+  R.sign = pick(SIGNS);
+  view();
+}
+function finish(){
+  R.over = true;
+  if(has('ribbon')) R.echo += 10;
+  R.echo = Math.round(R.echo * 10) / 10;
+  R.wokeN = R.echo >= 85 ? 3 : R.echo >= 55 ? 2 : R.echo >= 30 ? 1 : 0;
+  R.woke = R.wokeN > 0;
+  R.woken = [];
+  for(var k = 0; k < R.wokeN; k++){
+    var id = (R.target + k * 13) % 39;
+    R.woken.push(id);
+    if(P.found.indexOf(id) < 0){ P.found.push(id); P.found.sort(function(a, b){ return a - b; }); }
+  }
+  if(R.echo > P.best) P.best = R.echo;
+  P.runs += 1;
+  save();
+  if(R.woke) bell();
+  view('end');
+}
+function fmt(n){ return (Math.round(n * 10) / 10).toString(); }
+function fmtq(n){ return (Math.round(n * 10) / 10).toFixed(1); }   /* 静けさは必ず小数1桁 */
+
+/* ---- 次の一手（MapleStory批判への答え: 毎回1行で示す） ---- */
+function nextHint(){
+  if(R.oil >= 2 && R.fires < 3) return '油が' + R.oil + 'つある。<b>次の焚き火</b>で種火を引ける。';
+  if(R.quiet < 2.0 && R.breath > 4){
+    return 'ささやく を' + Math.ceil((2.0 - R.quiet) / (has('bell') ? 0.5 : 0.3)) +
+           '回で <b>静けさ 2.0</b>。そこから ふつうに の響きは ' +
+           fmt((3 + (has('crown') ? 2 : 0)) * 2) + ' になる。';
+  }
+  if(R.breath <= 3) return '息はあと' + R.breath + '。<b>はっきり</b>で締めると響き +5（静けさは戻る）。';
+  if(R.quiet >= 2.0){
+    var nx = R.echo < 30 ? 30 : R.echo < 55 ? 55 : 85;
+    return '静けさ ' + fmtq(R.quiet) + '。<b>ふつうに</b> で ' +
+           fmt((3 + (has('crown') ? 2 : 0)) * R.quiet) + ' 入る。あと ' + fmt(nx - R.echo) + ' で次の人。';
+  }
+  return '息が切れたら夜が明ける。<b>失うものはない。</b>';
+}
+
+/* ---- 画面 ---- */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function view(mode){
+  var a = document.getElementById('app'), s = document.getElementById('sub'), h = '';
+
+  if(!R){                                        /* --- ホーム --- */
+    s.textContent = '夜、ひとりを見つける';
+    h += '<div class="card">' +
+         '<div style="font-size:15.5px;line-height:1.95">声を出すと、響きが集まる。<br>' +
+         '<span style="color:var(--quiet)">ちいさな声ほど、静けさが伸びる。</span><br>' +
+         '静けさは、あとの声を何倍にもする。</div>' +
+         '<div class="note">響き 30 でひとり、55 でふたり、85 で3人が目をあけます。<br>' +
+         '息が切れたら夜が明けます。失うものはありません。</div></div>';
+    if(CHALLENGE) h += '<div class="card"><div style="color:var(--wood)">渡された夜: 響き ' + CHALLENGE + ' を超える</div>' +
+                       '<div class="note">同じ種の、同じ夜です。</div></div>';
+    h += '<button class="go" onclick="startRun(' + (SEEDPARAM || 'newSeed()') + ')">夜に出る</button>';
+    if(P.runs) h += '<button class="ghost" onclick="startRun(newSeed())">ちがう夜に出る</button>';
+    h += collection();
+    a.innerHTML = h; return;
+  }
+
+  if(mode === 'fire'){                           /* --- 焚き火 --- */
+    s.textContent = '焚き火';
+    h += hud() + '<div class="scene">火が、まだ残っていた。</div>';
+    h += '<div class="seeds">';
+    R.draft.forEach(function(sd){
+      h += '<button onclick="takeSeed(\'' + sd.id + '\')"' + (R.oil < 2 ? ' disabled' : '') + '>' +
+           '<div class="nm">' + sd.n + '　<span style="font-size:11.5px;color:var(--dim)">油2</span></div>' +
+           '<div class="ds">' + sd.d + '</div></button>';
+    });
+    h += '</div><button class="ghost" onclick="takeSeed(null)">何も取らずに行く</button>';
+    h += held() + '<div class="hint">' + nextHint() + '</div>';
+    a.innerHTML = h; return;
+  }
+
+  if(mode === 'end'){                            /* --- 夜明け --- */
+    s.textContent = '夜が明けた';
+    h += '<div class="card" style="text-align:center;padding:22px 15px">' +
+         '<div class="big">響き ' + fmt(R.echo) + '</div>';
+    if(R.woke){
+      h += '<div style="margin-top:12px;color:var(--ok)">' +
+           (R.wokeN === 1 ? 'ひとり、目をあけた' : R.wokeN + '人、目をあけた') + '</div>';
+      h += '<div class="who">' + R.woken.map(function(id){
+             var q = person(id);
+             return q.n ? '<b>' + q.n + '</b>　<span style="color:var(--dim)">' + q.l + '</span>'
+                        : '<span style="color:var(--dim)">まだ名前のない人</span>';
+           }).join('<br>') + '</div>';
+    } else {
+      h += '<div style="margin-top:12px;color:var(--dim)">まだ、とどかない</div>' +
+           '<div class="note">あと ' + fmt(30 - R.echo) + ' で、ひとり目をあけます。責められることは何もありません。</div>';
+    }
+    var nx = R.echo < 30 ? 30 : R.echo < 55 ? 55 : R.echo < 85 ? 85 : 0;
+    if(nx) h += '<div class="note">響き <b style="color:var(--wood)">' + nx + '</b> で、' +
+                (nx === 30 ? 'ひとり' : nx === 55 ? 'ふたり' : '3人') + '。</div>';
+    h += '</div>';
+    h += '<table>' +
+         '<tr><td>静けさ（最後）</td><td>' + fmtq(R.quiet) + '</td></tr>' +
+         '<tr><td>歩いた数</td><td>' + R.step + '</td></tr>' +
+         '<tr><td>種火</td><td>' + (R.held.length ? R.held.map(function(i){ return seedOf(i).n; }).join('・') : 'なし') + '</td></tr>' +
+         '<tr><td>いちばん高い響き</td><td>' + fmt(P.best) + '</td></tr>' +
+         '</table>';
+    if(CHALLENGE) h += '<div class="card" style="margin-top:12px;color:' + (R.echo > CHALLENGE ? 'var(--ok)' : 'var(--dim)') + '">' +
+                       (R.echo > CHALLENGE ? '渡された夜（' + CHALLENGE + '）を超えた。' : '渡された夜は ' + CHALLENGE + '。まだ届かない。') + '</div>';
+    h += '<button class="go" onclick="startRun(newSeed())">もう一度、夜に出る</button>' +
+         '<button class="ghost" onclick="startRun(' + R.seed + ')">同じ夜をやり直す</button>' +
+         '<button class="ghost" onclick="handOver()" id="hand">この夜を、誰かに渡す</button>';
+    h += collection();
+    a.innerHTML = h; return;
+  }
+
+  /* --- 歩いている --- */
+  s.textContent = '歩いている';
+  h += hud();
+  h += '<div class="gain' + (R.reset ? ' reset' : '') + '">' + (R.gain || '') + '</div>';
+  h += '<div class="scene">' + esc(R.sign) + '</div>';
+  h += '<div class="voices">' +
+       btn('w', 'ささやく', '息1・響き ' + fmt((1 + (has('spoon') ? 1 : 0)) * R.quiet) + '　静けさ +' + (has('bell') ? '0.5' : '0.3')) +
+       btn('n', 'ふつうに', '息2・響き ' + fmt((3 + (has('crown') ? 2 : 0)) * R.quiet)) +
+       btn('l', 'はっきり', '息3・響き 5・油+3' + (has('ember') ? '' : '　静けさ→1.0')) +
+       '</div>';
+  h += held();
+  h += '<div class="hint">' + nextHint() + '</div>';
+  a.innerHTML = h;
+}
+function btn(k, nm, ef){
+  var dis = (k === 'w' ? 1 : k === 'n' ? 2 : 3) > R.breath;
+  return '<button class="' + k + '" onclick="speak(\'' + k + '\')"' + (dis ? ' disabled' : '') + '>' +
+         '<span class="nm">' + nm + '</span><span class="ef">' + ef + '</span></button>';
+}
+function hud(){
+  return '<div class="hud">' +
+    '<div><span class="k">息</span><span class="v">' + R.breath + '</span></div>' +
+    '<div><span class="k">響き</span><span class="v">' + fmt(R.echo) + '</span></div>' +
+    '<div class="q"><span class="k">静けさ</span><span class="v">×' + fmtq(R.quiet) + '</span></div>' +
+    '<div class="o"><span class="k">油</span><span class="v">' + R.oil + '</span></div>' +
+    '</div>';
+}
+function held(){
+  if(!R.held.length) return '';
+  return '<div class="held">' + R.held.map(function(i){ return '<span>' + seedOf(i).n + '</span>'; }).join('') + '</div>';
+}
+function collection(){
+  var h = '<h2>39の灯り　' + P.found.length + ' / 39</h2><div class="grid">';
+  for(var i = 0; i < 39; i++){
+    var on = P.found.indexOf(i) >= 0, p = person(i);
+    h += '<i class="' + (on ? 'on' : '') + '"' +
+         (on ? ' onclick="whois(' + i + ')" title="' + (p.n || '名前はまだない') + '"' : '') + '>' +
+         (on ? '灯' : '') + '</i>';
+  }
+  h += '</div><div class="who" id="who"></div>';
+  if(P.runs) h += '<div class="note">出た夜: ' + P.runs + '回</div>';
+  return h;
+}
+function whois(i){
+  var p = person(i), e = document.getElementById('who');
+  if(!e) return;
+  e.innerHTML = p.n ? '<b>' + p.n + '</b><br><span style="color:var(--dim)">' + p.l + '</span>'
+                    : '<span style="color:var(--dim)">この人の原風景は、まだ書かれていない。</span>';
+}
+
+/* ---- 手渡し（jip の共有リンクと同じ形。サーバー不要） ---- */
+function handOver(){
+  var u = location.href.split('?')[0] + '?s=' + R.seed + '&r=' + Math.round(R.echo);
+  var b = document.getElementById('hand');
+  try{
+    navigator.clipboard.writeText(u).then(function(){ b.textContent = 'リンクをコピーした'; },
+                                          function(){ b.textContent = u; });
+  }catch(e){ b.textContent = u; }
+}
+
+/* ---- 起動 ---- */
+(function(){
+  load(); paintMute();
+  var q = location.search.match(/[?&]s=(-?\d+)/);
+  if(q) SEEDPARAM = parseInt(q[1], 10) | 0;
+  var c = location.search.match(/[?&]r=(\d+)/);
+  if(c) CHALLENGE = parseInt(c[1], 10) | 0;
+  view();
+})();
+</script>
+</div></body>
+</html>
